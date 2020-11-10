@@ -2,7 +2,7 @@
 declare(strict_types=1);
 namespace FFTracker;
 
-class Dummy
+class FFTracker
 {
     
 }
