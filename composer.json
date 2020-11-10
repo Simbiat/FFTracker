@@ -1,0 +1,29 @@
+{
+    "name": "simbiat/fftracker",
+    "type": "library",
+    "keywords": ["ffxiv","php","tracker","lodestone"],
+    "description": "Library to track changes on Final Fantasy XIV Lodestone",
+    "homepage": "https://github.com/Simbiat/fftracker",
+    "license": "AGPL-3.0-or-later",
+    "authors": [
+        {
+            "name": "Dmitry Kustov",
+            "email": "simbiat@outlook.com",
+            "homepage": "https://simbiat.ru",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^7.4",
+        "simbiat/lodestone-php": "^1.21.1+20200905"
+    },
+    "autoload": {
+        "psr-4": {
+            "FFTracker\\": "src/"
+        }
+    },
+	"support": {
+		"issues": "https://github.com/Simbiat/fftracker/issues",
+		"source": "https://github.com/Simbiat/fftracker"
+	}
+}
