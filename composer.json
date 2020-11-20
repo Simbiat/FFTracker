@@ -15,8 +15,9 @@
     ],
     "require": {
         "php": "^7.4",
-        "simbiat/lodestone-php": "^1.21.1+20200905",
-        "simbiat/database": "^1.1.2+20200905"
+        "ext-gd": "*",
+        "simbiat/lodestone-php": "^1.21.3+20201112",
+        "simbiat/database": "^1.1.4+20201114"
     },
     "autoload": {
         "psr-4": {
