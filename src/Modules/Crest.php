@@ -6,23 +6,26 @@ namespace FFTracker\Modules;
 trait Crest
 {
     #Function to return either the actual crest or a placeholder if it's missing
-    public function CrestShow(): void
+    public function CrestShow(string $imgname): void
     {
-        if (file_exists($this->dir.$_SERVER['REQUEST_URI'])) {
-            $imgname = $this->dir.$_SERVER['REQUEST_URI'];
+        #Checking if we have PvP or FC based on ID format and get appropriate default path
+        if (preg_match('/[a-zA-Z0-9]{40}\.png/mi', $imgname)) {
+            $imgname = $this->pvpcrestpath.$imgname;
         } else {
-            $imgname = dirname(dirname(__FILE__)).'/images/fftracker/fftracker.png';
+            $imgname = $this->fccrestpath.$imgname;
         }
+        #Use palceholder in case file is missing
+        if (!file_exists($imgname)) {
+            $imgname = dirname(dirname(__FILE__)).'/Images/fftracker.png';
+        }
+        #Pass the file through to browser
         $fp = fopen($imgname, 'rb');
-        header("Content-Type: image/png");
-        header("Content-Length: " . filesize($imgname));
+        header('Cache-Control: public, max-age=15552000');
+        header('Content-Type: image/png');
+        header('Content-Length: ' . filesize($imgname));
         fpassthru($fp);
-    }
-    
-    #Function to show map with marker of Free Company's estate or a placeholder if no estate is registered
-    public function EstateMarkerShow(): void
-    {
-        
+        #Ensure we exit
+        exit;
     }
     
     #Function to merge 1 to 3 images making up a crest on Lodestone into 1 stored on tracker side
@@ -64,7 +67,7 @@ trait Crest
                 imagedestroy($layers[$i]);
             }
             #Saving file
-            imagepng($image, $imgfolder.$groupid.".png", 9, PNG_ALL_FILTERS);
+            imagepng($image, $imgfolder.$groupid.'.png', 9, PNG_ALL_FILTERS);
             #Explicitely destroy image object
             imagedestroy($image);
             return true;

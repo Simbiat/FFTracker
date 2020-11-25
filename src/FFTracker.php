@@ -25,7 +25,7 @@ class FFTracker
         $this->getPvpCrestPath();
     }
     
-    public function Update(string $id, string $type = ''): bool
+    public function Update(string $id, string $type = '')
     {
         #Grab data first
         $data = $this->LodestoneGrab($id, $type);
@@ -34,15 +34,14 @@ class FFTracker
                 #Means that entity was removed from Lodestone
                 #Mark as deleted in tracker
                 $this->DeleteEntity($id, $data['entitytype']);
+                return true;
             } else {
                 #Data was retrieved, update entity
                 return $this->EntityUpdate($data);
             }
         } else {
-            if (is_string($data)) {
-                #This means, that an error was returned
-                
-            }
+            #This means, that an error was returned
+            return strval($data);
         }
     }
 }

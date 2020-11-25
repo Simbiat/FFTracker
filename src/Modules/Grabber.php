@@ -87,14 +87,18 @@ trait Grabber
     private function CharacterGrab(string $id)
     {
         $Lodestone = (new \Lodestone\Api);
-        $data = $Lodestone->setLanguage($this->language)->setUseragent($this->useragent)->getCharacter($id)->getCharacterJobs($id)->getResult();
+        $data = $Lodestone->setLanguage($this->language)->setUseragent($this->useragent)->getCharacter($id)->getCharacterJobs($id)->getCharacterAchievements($id, false, 0, false, false, true)->getResult();
         if (empty($data['characters'][$id]['server'])) {
             if (@$data['characters'][$id] == 404) {
                 $data['entitytype'] = 'character';
                 $data['404'] = true;
                 return $data;
             } else {
-                return 'Failed to get all necessary data for character '.$id.' ('.$Lodestone->getLastError()['url'].'): '.$Lodestone->getLastError()['error'];
+                if (empty($Lodestone->getLastError())) {
+                    return 'Failed to get any data for Character '.$id;
+                } else {
+                    return 'Failed to get all necessary data for Character '.$id.' ('.$Lodestone->getLastError()['url'].'): '.$Lodestone->getLastError()['error'];
+                }
             }
         }
         $data = $data['characters'][$id];
@@ -108,13 +112,18 @@ trait Grabber
     {
         $Lodestone = (new \Lodestone\Api);
         $data = $Lodestone->setLanguage($this->language)->setUseragent($this->useragent)->getFreeCompany($id)->getFreeCompanyMembers($id, 0)->getResult();
-        if (empty($data['freecompanies'][$id]['server']) || empty($data['freecompanies'][$id]['members']) || (count($data['freecompanies'][$id]['members']) - 3) < $data['freecompanies'][$id]['members_count']) {
+        if (empty($data['freecompanies'][$id]['server']) || empty($data['freecompanies'][$id]['members']) || (count($data['freecompanies'][$id]['members'])) < $data['freecompanies'][$id]['members_count']) {
             if (@$data['freecompanies'][$id] == 404) {
                 $data['entitytype'] = 'freecompany';
                 $data['404'] = true;
                 return $data;
+            } else {
+                if (empty($Lodestone->getLastError())) {
+                    return 'Failed to get any data for Free Company '.$id;
+                } else {
+                    return 'Failed to get all necessary data for Free Company '.$id.' ('.$Lodestone->getLastError()['url'].'): '.$Lodestone->getLastError()['error'];
+                }
             }
-            return 'Failed to get all necessary data for Free Company '.$id.' ('.$Lodestone->getLastError()['url'].'): '.$Lodestone->getLastError()['error'];
         }
         $data = $data['freecompanies'][$id];
         $data['freecompanyid'] = $id;
@@ -127,13 +136,18 @@ trait Grabber
     {
         $Lodestone = (new \Lodestone\Api);
         $data = $Lodestone->setLanguage($this->language)->setUseragent($this->useragent)->getLinkshellMembers($id, 0)->getResult();
-        if (empty($data['linkshells'][$id]['server']) || empty($data['linkshells'][$id]['members']) || (count($data['linkshells'][$id]['members']) - 3) < $data['linkshells'][$id]['members']['total']) {
+        if (empty($data['linkshells'][$id]['server']) || empty($data['linkshells'][$id]['members']) || (count($data['linkshells'][$id]['members'])) < $data['linkshells'][$id]['memberscount']) {
             if (@$data['linkshells'][$id]['members'] == 404) {
                 $data['entitytype'] = 'linkshell';
                 $data['404'] = true;
                 return $data;
+            } else {
+                if (empty($Lodestone->getLastError())) {
+                    return 'Failed to get any data for Linkshell '.$id;
+                } else {
+                    return 'Failed to get all necessary data for Linkshell '.$id.' ('.$Lodestone->getLastError()['url'].'): '.$Lodestone->getLastError()['error'];
+                }
             }
-            return 'Failed to get all necessary data for Linkshell '.$id.' ('.$Lodestone->getLastError()['url'].'): '.$Lodestone->getLastError()['error'];
         }
         $data = $data['linkshells'][$id];
         $data['linkshellid'] = $id;
@@ -146,13 +160,18 @@ trait Grabber
     {
         $Lodestone = (new \Lodestone\Api);
         $data = $Lodestone->setLanguage($this->language)->setUseragent($this->useragent)->getLinkshellMembers($id, 0)->getResult();
-        if (empty($data['linkshells'][$id]['server']) || empty($data['linkshells'][$id]['members']) || (count($data['linkshells'][$id]['members']) - 3) < $data['linkshells'][$id]['members']['total']) {
+        if (empty($data['linkshells'][$id]['dataCenter']) || empty($data['linkshells'][$id]['members']) || (count($data['linkshells'][$id]['members'])) < $data['linkshells'][$id]['memberscount']) {
             if (@$data['linkshells'][$id]['members'] == 404) {
                 $data['entitytype'] = 'crossworldlinkshell';
                 $data['404'] = true;
                 return $data;
+            } else {
+                if (empty($Lodestone->getLastError())) {
+                    return 'Failed to get any data for Crossworld Linkshell '.$id;
+                } else {
+                    return 'Failed to get all necessary data for Crossworld Linkshell '.$id.' ('.$Lodestone->getLastError()['url'].'): '.$Lodestone->getLastError()['error'];
+                }
             }
-            return 'Failed to get all necessary data for Crossworld Linkshell '.$id.' ('.$Lodestone->getLastError()['url'].'): '.$Lodestone->getLastError()['error'];
         }
         $data = $data['linkshells'][$id];
         $data['linkshellid'] = $id;
@@ -170,8 +189,13 @@ trait Grabber
                 $data['entitytype'] = 'pvpteam';
                 $data['404'] = true;
                 return $data;
+            } else {
+                if (empty($Lodestone->getLastError())) {
+                    return 'Failed to get any data for PvP Team '.$id;
+                } else {
+                    return 'Failed to get all necessary data for PvP Team '.$id.' ('.$Lodestone->getLastError()['url'].'): '.$Lodestone->getLastError()['error'];
+                }
             }
-            return 'Failed to get all necessary data for PvP Team '.$id.' ('.$Lodestone->getLastError()['url'].'): '.$Lodestone->getLastError()['error'];
         }
         $data = $data['pvpteams'][$id];
         $data['pvpteamid'] = $id;

@@ -61,7 +61,7 @@ trait Setters
     public function setFcCrestPath(string $fccrestpath = '')
     {
         if ($fccrestpath === '') {
-            $fccrestpath = dirname(dirname(__FILE__)).'/images/merged-crests';
+            $fccrestpath = dirname(dirname(__FILE__)).'/Images/merged-crests';
         }
         $this->fccrestpath = preg_replace('/(.*[^\\\\\/]{1,})([\\\\\/]{1,}$)/m', '$1', $fccrestpath).'/';
         return $this;
@@ -70,7 +70,7 @@ trait Setters
     public function setPvpCrestPath(string $pvpcrestpath = '')
     {
         if ($pvpcrestpath === '') {
-            $pvpcrestpath = dirname(dirname(__FILE__)).'/images/merged-crests';
+            $pvpcrestpath = dirname(dirname(__FILE__)).'/Images/merged-crests';
         }
         $this->pvpcrestpath = preg_replace('/(.*[^\\\\\/]{1,})([\\\\\/]{1,}$)/m', '$1', $pvpcrestpath).'/';
         return $this;
@@ -117,7 +117,7 @@ trait Setters
     {
         $fccrestpath = strval((new \SimbiatDB\Controller)->selectValue('SELECT `value` FROM `'.$this->dbprefix.'settings` WHERE `setting`=\'freecompanycrestpath\''));
         if ($fccrestpath === '') {
-            $fccrestpath = dirname(dirname(__FILE__)).'/images/merged-crests';
+            $fccrestpath = dirname(dirname(__FILE__)).'/Images/merged-crests';
         }
         $this->fccrestpath = preg_replace('/(.*[^\\\\\/]{1,})([\\\\\/]{1,}$)/m', '$1', $fccrestpath).'/';
         return $this->fccrestpath;
@@ -127,7 +127,7 @@ trait Setters
     {
         $pvpcrestpath = strval((new \SimbiatDB\Controller)->selectValue('SELECT `value` FROM `'.$this->dbprefix.'settings` WHERE `setting`=\'pvpteamcrestpath\''));
         if ($pvpcrestpath === '') {
-            $pvpcrestpath = dirname(dirname(__FILE__)).'/images/merged-crests';
+            $pvpcrestpath = dirname(dirname(__FILE__)).'/Images/merged-crests';
         }
         $this->pvpcrestpath = preg_replace('/(.*[^\\\\\/]{1,})([\\\\\/]{1,}$)/m', '$1', $pvpcrestpath).'/';
         return $this->pvpcrestpath;

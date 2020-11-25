@@ -6,7 +6,7 @@ namespace FFTracker\Modules;
 trait Cron
 {
     #Function to process cron jobs for tracker for ease of access from outside
-    public function CronProcess(): bool
+    public function CronProcess()
     {
         try {
             #Update achievements first, since, most likely it will be quick due lack of those requiring an update
@@ -39,7 +39,10 @@ trait Cron
             if (!empty($entities)) {
                 foreach ($entities as $entity) {
                     #Updating entities. IDs are converted to string explicitly, since character and free company IDs should be returned as integers by default, but we need to use strings
-                    $this->EntityUpdate(strval($entity['id']), $entity['type']);
+                    $result = $this->Update(strval($entity['id']), $entity['type']);
+                    if ($result !== true) {
+                        return $result;
+                    }
                 }
             }
             return true;

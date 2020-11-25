@@ -170,10 +170,11 @@ trait Updater
                         ],
                     ];
                     $queries[] = [
-                        'INSERT INTO `'.$this->dbprefix.'character_achievement` SET `characterid`=:characterid, `achievementid`=:achievementid, `time`=UTC_DATE() ON DUPLICATE KEY UPDATE `time`=`time`;',
+                        'INSERT INTO `'.$this->dbprefix.'character_achievement` SET `characterid`=:characterid, `achievementid`=:achievementid, `time`=UTC_DATE() ON DUPLICATE KEY UPDATE `time`=:time;',
                         [
                             ':characterid'=>$data['characterid'],
                             ':achievementid'=>$achievementid,
+                            ':time'=>[$item['time'], 'date'],
                         ],
                     ];
                 }
@@ -191,10 +192,12 @@ trait Updater
                 #If we have triggered this from within PvP Team update, it will simply update the next run time which should not affect anything
                 $this->CronAdd($data['pvp']['id'], 'pvpteam');
             }
+            #Remove cron entry (if exists)
+            $this->CronRemove($data['characterid'], 'character');
             return true;
         } catch(\Exception $e) {
             #Update cron entry (if exists) with the error
-            $this->CronError('character', $data['characterid'], $e->getTraceAsString());
+            $this->CronError($data['characterid'], 'character', $e->getTraceAsString());
             return false;
         }
     }
@@ -205,13 +208,13 @@ trait Updater
             #Main query to insert or update a Free Company
             $queries[] = [
                 'INSERT INTO `'.$this->dbprefix.'freecompany` (
-                    `freecompanyid`, `name`, `serverid`, `formed`, `registered`, `updated`, `deleted`, `grandcompanyid`, `tag`, `rank`, `slogan`, `activeid`, `recruitment`, `estate_zone`, `estateid`, `estate_message`, `Role-playing`, `Leveling`, `Casual`, `Hardcore`, `Dungeons`, `Guildhests`, `Trials`, `Raids`, `PvP`, `Tank`, `Healer`, `DPS`, `Crafter`, `Gatherer`
+                    `freecompanyid`, `name`, `serverid`, `formed`, `registered`, `updated`, `deleted`, `grandcompanyid`, `tag`, `rank`, `slogan`, `activeid`, `recruitment`, `communityid`, `estate_zone`, `estateid`, `estate_message`, `Role-playing`, `Leveling`, `Casual`, `Hardcore`, `Dungeons`, `Guildhests`, `Trials`, `Raids`, `PvP`, `Tank`, `Healer`, `DPS`, `Crafter`, `Gatherer`
                 )
                 VALUES (
-                    :freecompanyid, :name, (SELECT `serverid` FROM `'.$this->dbprefix.'server` WHERE `server`=:server), :formed, UTC_DATE(), UTC_TIMESTAMP(), NULL, (SELECT `gcrankid` FROM `'.$this->dbprefix.'grandcompany_rank` WHERE `gc_name`=:grandcompany ORDER BY `gcrankid` ASC LIMIT 1), :tag, :rank, :slogan, (SELECT `activeid` FROM `'.$this->dbprefix.'timeactive` WHERE `active`=:active AND `active` IS NOT NULL LIMIT 1), :recruitment, :estate_zone, (SELECT `estateid` FROM `'.$this->dbprefix.'estate` WHERE CONCAT(\'Plot \', `plot`, \', \', `ward`, \' Ward, \', `area`, \' (\', CASE WHEN `size` = 1 THEN \'Small\' WHEN `size` = 2 THEN \'Medium\' WHEN `size` = 3 THEN \'Large\' END, \')\')=:estate_address LIMIT 1), :estate_message, :roleplaying, :leveling, :casual, :hardcore, :dungeons, :guildhests, :trials, :raids, :pvp, :tank, :healer, :dps, :crafter, :gatherer
+                    :freecompanyid, :name, (SELECT `serverid` FROM `'.$this->dbprefix.'server` WHERE `server`=:server), :formed, UTC_DATE(), UTC_TIMESTAMP(), NULL, (SELECT `gcrankid` FROM `'.$this->dbprefix.'grandcompany_rank` WHERE `gc_name`=:grandcompany ORDER BY `gcrankid` ASC LIMIT 1), :tag, :rank, :slogan, (SELECT `activeid` FROM `'.$this->dbprefix.'timeactive` WHERE `active`=:active AND `active` IS NOT NULL LIMIT 1), :recruitment, :communityid, :estate_zone, (SELECT `estateid` FROM `'.$this->dbprefix.'estate` WHERE CONCAT(\'Plot \', `plot`, \', \', `ward`, \' Ward, \', `area`, \' (\', CASE WHEN `size` = 1 THEN \'Small\' WHEN `size` = 2 THEN \'Medium\' WHEN `size` = 3 THEN \'Large\' END, \')\')=:estate_address LIMIT 1), :estate_message, :roleplaying, :leveling, :casual, :hardcore, :dungeons, :guildhests, :trials, :raids, :pvp, :tank, :healer, :dps, :crafter, :gatherer
                 )
                 ON DUPLICATE KEY UPDATE
-                    `name`=:name, `serverid`=(SELECT `serverid` FROM `'.$this->dbprefix.'server` WHERE `server`=:server), `updated`=UTC_TIMESTAMP(), `deleted`=NULL, `tag`=:tag, `rank`=:rank, `slogan`=:slogan, `activeid`=(SELECT `activeid` FROM `'.$this->dbprefix.'timeactive` WHERE `active`=:active AND `active` IS NOT NULL LIMIT 1), `recruitment`=:recruitment, `estate_zone`=:estate_zone, `estateid`=(SELECT `estateid` FROM `'.$this->dbprefix.'estate` WHERE CONCAT(\'Plot \', `plot`, \', \', `ward`, \' Ward, \', `area`, \' (\', CASE WHEN `size` = 1 THEN \'Small\' WHEN `size` = 2 THEN \'Medium\' WHEN `size` = 3 THEN \'Large\' END, \')\')=:estate_address LIMIT 1), `estate_message`=:estate_message, `Role-playing`=:roleplaying, `Leveling`=:leveling, `Casual`=:casual, `Hardcore`=:hardcore, `Dungeons`=:dungeons, `Guildhests`=:guildhests, `Trials`=:trials, `Raids`=:raids, `PvP`=:pvp, `Tank`=:tank, `Healer`=:healer, `DPS`=:dps, `Crafter`=:crafter, `Gatherer`=:gatherer;',
+                    `name`=:name, `serverid`=(SELECT `serverid` FROM `'.$this->dbprefix.'server` WHERE `server`=:server), `updated`=UTC_TIMESTAMP(), `deleted`=NULL, `tag`=:tag, `rank`=:rank, `slogan`=:slogan, `activeid`=(SELECT `activeid` FROM `'.$this->dbprefix.'timeactive` WHERE `active`=:active AND `active` IS NOT NULL LIMIT 1), `recruitment`=:recruitment, `communityid`=:communityid, `estate_zone`=:estate_zone, `estateid`=(SELECT `estateid` FROM `'.$this->dbprefix.'estate` WHERE CONCAT(\'Plot \', `plot`, \', \', `ward`, \' Ward, \', `area`, \' (\', CASE WHEN `size` = 1 THEN \'Small\' WHEN `size` = 2 THEN \'Medium\' WHEN `size` = 3 THEN \'Large\' END, \')\')=:estate_address LIMIT 1), `estate_message`=:estate_message, `Role-playing`=:roleplaying, `Leveling`=:leveling, `Casual`=:casual, `Hardcore`=:hardcore, `Dungeons`=:dungeons, `Guildhests`=:guildhests, `Trials`=:trials, `Raids`=:raids, `PvP`=:pvp, `Tank`=:tank, `Healer`=:healer, `DPS`=:dps, `Crafter`=:crafter, `Gatherer`=:gatherer;',
                 [
                     ':freecompanyid'=>$data['freecompanyid'],
                     ':name'=>$data['name'],
@@ -255,6 +258,10 @@ trait Updater
                     ':dps'=>(empty($data['seeking']) ? 0 : $data['seeking'][array_search('DPS', array_column($data['seeking'], 'name'))]['enabled']),
                     ':crafter'=>(empty($data['seeking']) ? 0 : $data['seeking'][array_search('Crafter', array_column($data['seeking'], 'name'))]['enabled']),
                     ':gatherer'=>(empty($data['seeking']) ? 0 : $data['seeking'][array_search('Gatherer', array_column($data['seeking'], 'name'))]['enabled']),
+                    ':communityid'=>[
+                            (empty($data['communityid']) ? NULL : $data['communityid']),
+                            (empty($data['communityid']) ? 'null' : 'string'),
+                    ],
                 ],
             ];
             #Register Free Company name if it's not registered already
@@ -303,7 +310,7 @@ trait Updater
                             ],
                         ];
                     #Actually registering/updating members
-                    if (in_array(strval($memberid), $regmembers) || (!in_array(strval($memberid), $regmembers) && $this->LodestoneGrab(strval($memberid), 'character') === true)) {
+                    if (in_array(strval($memberid), $regmembers) || (!in_array(strval($memberid), $regmembers) && $this->Update(strval($memberid), 'character') === true)) {
                         $queries[] = [
                             'INSERT INTO `'.$this->dbprefix.'freecompany_character` (`characterid`, `freecompanyid`, `join`, `rankid`) VALUES (:memberid, :freecompanyid, UTC_DATE(), :rankid) ON DUPLICATE KEY UPDATE `rankid`=:rankid;',
                             [
@@ -321,10 +328,12 @@ trait Updater
             (new \SimbiatDB\Controller)->query($queries);
             #Merge crest
             $this->CrestMerge($data['freecompanyid'], $data['crest']);
+            #Remove cron entry (if exists)
+            $this->CronRemove($data['freecompanyid'], 'freecompany');
             return true;
         } catch(\Exception $e) {
             #Update cron entry (if exists) with the error
-            $this->CronError('freecompany', $data['freecompanyid'], $e->getTraceAsString());
+            $this->CronError($data['freecompanyid'], 'freecompany', $e->getTraceAsString());
             return false;
         }
     }
@@ -334,11 +343,15 @@ trait Updater
         try {
             #Main query to insert or update a Linkshell
             $queries[] = [
-                'INSERT INTO `'.$this->dbprefix.'linkshell`(`linkshellid`, `name`, `crossworld`, `formed`, `registered`, `updated`, `deleted`, `serverid`) VALUES (:linkshellid, :name, 0, NULL, UTC_DATE(), UTC_TIMESTAMP(), NULL, (SELECT `serverid` FROM `'.$this->dbprefix.'server` WHERE `server`=:server)) ON DUPLICATE KEY UPDATE `name`=:name, `formed`=NULL, `updated`=UTC_TIMESTAMP(), `deleted`=NULL, `serverid`=(SELECT `serverid` FROM `'.$this->dbprefix.'server` WHERE `server`=:server);',
+                'INSERT INTO `'.$this->dbprefix.'linkshell`(`linkshellid`, `name`, `crossworld`, `formed`, `registered`, `updated`, `deleted`, `serverid`) VALUES (:linkshellid, :name, 0, NULL, UTC_DATE(), UTC_TIMESTAMP(), NULL, (SELECT `serverid` FROM `'.$this->dbprefix.'server` WHERE `server`=:server)) ON DUPLICATE KEY UPDATE `name`=:name, `formed`=NULL, `updated`=UTC_TIMESTAMP(), `deleted`=NULL, `serverid`=(SELECT `serverid` FROM `'.$this->dbprefix.'server` WHERE `server`=:server), `communityid`=:communityid;',
                 [
                     ':linkshellid'=>$data['linkshellid'],
                     ':server'=>$data['server'],
                     ':name'=>$data['name'],
+                    ':communityid'=>[
+                            (empty($data['communityid']) ? NULL : $data['communityid']),
+                            (empty($data['communityid']) ? 'null' : 'string'),
+                    ],
                 ],
             ];
             #Register Linkshell name if it's not registered already
@@ -368,7 +381,7 @@ trait Updater
             #Actually registering/updating members
             foreach ($data['members'] as $memberid=>$member) {
                 if (preg_match('/^\d{1,10}$/', strval($memberid))) {
-                    if (in_array(strval($memberid), $regmembers) || (!in_array(strval($memberid), $regmembers) && $this->LodestoneGrab(strval($memberid), 'character') === true)) {
+                    if (in_array(strval($memberid), $regmembers) || (!in_array(strval($memberid), $regmembers) && $this->Update(strval($memberid), 'character') === true)) {
                         $queries[] = [
                             'INSERT INTO `'.$this->dbprefix.'linkshell_character` (`linkshellid`, `characterid`, `rankid`) VALUES (:linkshellid, :memberid, (SELECT `lsrankid` FROM `'.$this->dbprefix.'linkshell_rank` WHERE `rank`=:rank AND `rank` IS NOT NULL LIMIT 1)) ON DUPLICATE KEY UPDATE `rankid`=(SELECT `lsrankid` FROM `'.$this->dbprefix.'linkshell_rank` WHERE `rank`=:rank AND `rank` IS NOT NULL LIMIT 1);',
                             [
@@ -384,10 +397,12 @@ trait Updater
             $queries = array_merge($queries, $this->MassRemoveFromGroup($data['linkshellid'], 'linkshell', $inmembers));
             #Running the queries we've accumulated
             (new \SimbiatDB\Controller)->query($queries);
+            #Remove cron entry (if exists)
+            $this->CronRemove($data['linkshellid'], 'linkshell');
             return true;
         } catch(Exception $e) {
             #Update cron entry (if exists) with the error
-            $this->CronError('linkshell', $data['linkshellid'], $e->getTraceAsString());
+            $this->CronError($data['linkshellid'], 'linkshell', $e->getTraceAsString());
             return false;
         }
     }
@@ -397,12 +412,16 @@ trait Updater
         try {
             #Main query to insert or update a Linkshell
             $queries[] = [
-                'INSERT INTO `'.$this->dbprefix.'linkshell`(`linkshellid`, `name`, `crossworld`, `formed`, `registered`, `updated`, `deleted`, `serverid`) VALUES (:linkshellid, :name, 1, :formed, UTC_DATE(), UTC_TIMESTAMP(), NULL, (SELECT `serverid` FROM `'.$this->dbprefix.'server` WHERE `datacenter`=:datacenter LIMIT 1)) ON DUPLICATE KEY UPDATE `name`=:name, `formed`=:formed, `updated`=UTC_TIMESTAMP(), `deleted`=NULL, `serverid`=(SELECT `serverid` FROM `'.$this->dbprefix.'server` WHERE `datacenter`=:datacenter LIMIT 1);',
+                'INSERT INTO `'.$this->dbprefix.'linkshell`(`linkshellid`, `name`, `crossworld`, `formed`, `registered`, `updated`, `deleted`, `serverid`, `communityid`) VALUES (:linkshellid, :name, 1, :formed, UTC_DATE(), UTC_TIMESTAMP(), NULL, (SELECT `serverid` FROM `'.$this->dbprefix.'server` WHERE `datacenter`=:datacenter LIMIT 1), :communityid) ON DUPLICATE KEY UPDATE `name`=:name, `formed`=:formed, `updated`=UTC_TIMESTAMP(), `deleted`=NULL, `serverid`=(SELECT `serverid` FROM `'.$this->dbprefix.'server` WHERE `datacenter`=:datacenter LIMIT 1), `communityid`=:communityid;',
                 [
                     ':linkshellid'=>$data['linkshellid'],
-                    ':datacenter'=>$data['server'],
+                    ':datacenter'=>$data['dataCenter'],
                     ':name'=>$data['name'],
                     ':formed'=>[$data['formed'], 'date'],
+                    ':communityid'=>[
+                            (empty($data['communityid']) ? NULL : $data['communityid']),
+                            (empty($data['communityid']) ? 'null' : 'string'),
+                    ],
                 ],
             ];
             #Register Linkshell name if it's not registered already
@@ -432,7 +451,7 @@ trait Updater
             #Actually registering/updating members
             foreach ($data['members'] as $memberid=>$member) {
                 if (preg_match('/^\d{1,10}$/', strval($memberid))) {
-                    if (in_array(strval($memberid), $regmembers) || (!in_array(strval($memberid), $regmembers) && $this->LodestoneGrab(strval($memberid), 'character') === true)) {
+                    if (in_array(strval($memberid), $regmembers) || (!in_array(strval($memberid), $regmembers) && $this->Update(strval($memberid), 'character') === true)) {
                         $queries[] = [
                             'INSERT INTO `'.$this->dbprefix.'linkshell_character` (`linkshellid`, `characterid`, `rankid`) VALUES (:linkshellid, :memberid, (SELECT `lsrankid` FROM `'.$this->dbprefix.'linkshell_rank` WHERE `rank`=:rank AND `rank` IS NOT NULL LIMIT 1)) ON DUPLICATE KEY UPDATE `rankid`=(SELECT `lsrankid` FROM `'.$this->dbprefix.'linkshell_rank` WHERE `rank`=:rank AND `rank` IS NOT NULL LIMIT 1);',
                             [
@@ -448,10 +467,12 @@ trait Updater
             $queries = array_merge($queries, $this->MassRemoveFromGroup($data['linkshellid'], 'linkshell', $inmembers));
             #Running the queries we've accumulated
             (new \SimbiatDB\Controller)->query($queries);
+            #Remove cron entry (if exists)
+            $this->CronRemove($data['linkshellid'], 'crossworldlinkshell');
             return true;
         } catch(Exception $e) {
             #Update cron entry (if exists) with the error
-            $this->CronError('linkshell', $data['linkshellid'], $e->getTraceAsString());
+            $this->CronError($data['linkshellid'], 'crossworldlinkshell', $e->getTraceAsString());
             return false;
         }
     }
@@ -461,12 +482,16 @@ trait Updater
         try {
             #Main query to insert or update a PvP Team
             $queries[] = [
-                'INSERT INTO `'.$this->dbprefix.'pvpteam` (`pvpteamid`, `name`, `formed`, `registered`, `updated`, `deleted`, `datacenterid`) VALUES (:pvpteamid, :name, :formed, UTC_DATE(), UTC_TIMESTAMP(), NULL, (SELECT `serverid` FROM `'.$this->dbprefix.'server` WHERE `datacenter`=:datacenter ORDER BY `serverid` LIMIT 1)) ON DUPLICATE KEY UPDATE `name`=:name, `formed`=:formed, `updated`=UTC_TIMESTAMP(), `deleted`=NULL, `datacenterid`=(SELECT `serverid` FROM `'.$this->dbprefix.'server` WHERE `datacenter`=:datacenter ORDER BY `serverid` LIMIT 1);',
+                'INSERT INTO `'.$this->dbprefix.'pvpteam` (`pvpteamid`, `name`, `formed`, `registered`, `updated`, `deleted`, `datacenterid`, `communityid`) VALUES (:pvpteamid, :name, :formed, UTC_DATE(), UTC_TIMESTAMP(), NULL, (SELECT `serverid` FROM `'.$this->dbprefix.'server` WHERE `datacenter`=:datacenter ORDER BY `serverid` LIMIT 1), :communityid) ON DUPLICATE KEY UPDATE `name`=:name, `formed`=:formed, `updated`=UTC_TIMESTAMP(), `deleted`=NULL, `datacenterid`=(SELECT `serverid` FROM `'.$this->dbprefix.'server` WHERE `datacenter`=:datacenter ORDER BY `serverid` LIMIT 1), `communityid`=:communityid;',
                 [
                     ':pvpteamid'=>$data['pvpteamid'],
                     ':datacenter'=>$data['dataCenter'],
                     ':name'=>$data['name'],
                     ':formed'=>[$data['formed'], 'date'],
+                    ':communityid'=>[
+                            (empty($data['communityid']) ? NULL : $data['communityid']),
+                            (empty($data['communityid']) ? 'null' : 'string'),
+                    ],
                 ],
             ];
             #Register PvP Team name if it's not registered already
@@ -496,7 +521,7 @@ trait Updater
             #Actually registering/updating members
             foreach ($data['members'] as $memberid=>$member) {
                 if (preg_match('/^\d{1,10}$/', strval($memberid))) {
-                    if (in_array(strval($memberid), $regmembers) || (!in_array(strval($memberid), $regmembers) && $this->LodestoneGrab(strval($memberid), 'character') === true)) {
+                    if (in_array(strval($memberid), $regmembers) || (!in_array(strval($memberid), $regmembers) && $this->Update(strval($memberid), 'character') === true)) {
                         $queries[] = [
                             'INSERT INTO `'.$this->dbprefix.'pvpteam_character` (`pvpteamid`, `characterid`, `rankid`, `matches`) VALUES (:pvpteamid, :memberid, (SELECT `pvprankid` FROM `'.$this->dbprefix.'pvpteam_rank` WHERE `rank`=:rank AND `rank` IS NOT NULL LIMIT 1), :matches) ON DUPLICATE KEY UPDATE `rankid`=(SELECT `pvprankid` FROM `'.$this->dbprefix.'pvpteam_rank` WHERE `rank`=:rank AND `rank` IS NOT NULL LIMIT 1), `matches`=:matches;',
                             [
@@ -515,10 +540,12 @@ trait Updater
             (new \SimbiatDB\Controller)->query($queries);
             #Merge crest
             $this->CrestMerge($data['pvpteamid'], $data['crest']);
+            #Remove cron entry (if exists)
+            $this->CronRemove($data['pvpteamid'], 'pvpteam');
             return true;
         } catch(Exception $e) {
             #Update cron entry (if exists) with the error
-            $this->CronError('pvpteam', $data['pvpteamid'], $e->getTraceAsString());
+            $this->CronError($data['pvpteamid'], 'pvpteam', $e->getTraceAsString());
             return false;
         }
     }
@@ -586,7 +613,9 @@ trait Updater
         $result = (new \SimbiatDB\Controller)->query('UPDATE `'.$this->dbprefix.$type.'` SET `deleted` = UTC_DATE() WHERE `'.$type.'id` = :id', [':id'=>$id]);
         if ($result === true) {
             if ($type === 'character') {
-                $result = (new \SimbiatDB\Controller)->query($this->MassRemoveFromGroup($id, $type, '\'\''));
+                $result = (new \SimbiatDB\Controller)->query($this->MassRemoveFromGroup($id, 'freecompany', '\'\''));
+                $result = (new \SimbiatDB\Controller)->query($this->MassRemoveFromGroup($id, 'linkshell', '\'\''));
+                $result = (new \SimbiatDB\Controller)->query($this->MassRemoveFromGroup($id, 'pvpteam', '\'\''));
             }
         } else {
             return $result;
