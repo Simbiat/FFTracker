@@ -275,9 +275,11 @@ trait Updater
             #Generating list of IDs for selects to process members
             $members = [];
             #There were cases when some characters had non-numeric symbols on certain HTML pages, this is more of a precaution now
-            foreach ($data['members'] as $memberid=>$member) {
-                if (preg_match('/^\d{1,10}$/', strval($memberid))) {
-                    $members[] = '\''.$memberid.'\'';
+            if (!empty($data['members'])) {
+                foreach ($data['members'] as $memberid=>$member) {
+                    if (preg_match('/^\d{1,10}$/', strval($memberid))) {
+                        $members[] = '\''.$memberid.'\'';
+                    }
                 }
             }
             #Adding ranking at this point since it needs members count, that we just got
@@ -298,27 +300,29 @@ trait Updater
                 $inmembers = implode(',', $members);
                 $regmembers = (new \SimbiatDB\Controller)->selectColumn('SELECT `characterid` FROM `'.$this->dbprefix.'character` WHERE `characterid` IN ('.$inmembers.')');
             }
-            foreach ($data['members'] as $memberid=>$member) {
-                if (preg_match('/^\d{1,10}$/', strval($memberid)) && !empty($member['rank'])) {
-                    #Register or update rank names
-                    $queries[] = [
-                            'INSERT INTO `'.$this->dbprefix.'freecompany_rank` (`freecompanyid`, `rankid`, `rankname`) VALUE (:freecompanyid, :rankid, :rankname) ON DUPLICATE KEY UPDATE `rankname`=:rankname',
-                            [
-                                ":freecompanyid"=>$data['freecompanyid'],
-                                ":rankid"=>$member['rankid'],
-                                ":rankname"=>$member['rank'],
-                            ],
-                        ];
-                    #Actually registering/updating members
-                    if (in_array(strval($memberid), $regmembers) || (!in_array(strval($memberid), $regmembers) && $this->Update(strval($memberid), 'character') === true)) {
+            if (!empty($data['members'])) {
+                foreach ($data['members'] as $memberid=>$member) {
+                    if (preg_match('/^\d{1,10}$/', strval($memberid)) && !empty($member['rank'])) {
+                        #Register or update rank names
                         $queries[] = [
-                            'INSERT INTO `'.$this->dbprefix.'freecompany_character` (`characterid`, `freecompanyid`, `join`, `rankid`) VALUES (:memberid, :freecompanyid, UTC_DATE(), :rankid) ON DUPLICATE KEY UPDATE `rankid`=:rankid;',
-                            [
-                                ':memberid'=>$memberid,
-                                ':freecompanyid'=>$data['freecompanyid'],
-                                ':rankid'=>$member['rankid'],
-                            ],
-                        ];
+                                'INSERT INTO `'.$this->dbprefix.'freecompany_rank` (`freecompanyid`, `rankid`, `rankname`) VALUE (:freecompanyid, :rankid, :rankname) ON DUPLICATE KEY UPDATE `rankname`=:rankname',
+                                [
+                                    ":freecompanyid"=>$data['freecompanyid'],
+                                    ":rankid"=>$member['rankid'],
+                                    ":rankname"=>$member['rank'],
+                                ],
+                            ];
+                        #Actually registering/updating members
+                        if (in_array(strval($memberid), $regmembers) || (!in_array(strval($memberid), $regmembers) && $this->Update(strval($memberid), 'character') === true)) {
+                            $queries[] = [
+                                'INSERT INTO `'.$this->dbprefix.'freecompany_character` (`characterid`, `freecompanyid`, `join`, `rankid`) VALUES (:memberid, :freecompanyid, UTC_DATE(), :rankid) ON DUPLICATE KEY UPDATE `rankid`=:rankid;',
+                                [
+                                    ':memberid'=>$memberid,
+                                    ':freecompanyid'=>$data['freecompanyid'],
+                                    ':rankid'=>$member['rankid'],
+                                ],
+                            ];
+                        }
                     }
                 }
             }
@@ -365,9 +369,11 @@ trait Updater
             #Generating list of IDs for selects to process members
             $members = [];
             #There were cases when some characters had non-numeric symbols on certain HTML pages, this is more of a precaution now
-            foreach ($data['members'] as $memberid=>$member) {
-                if (preg_match('/^\d{1,10}$/', strval($memberid))) {
-                    $members[] = '\''.$memberid.'\'';
+            if (!empty($data['members'])) {
+                foreach ($data['members'] as $memberid=>$member) {
+                    if (preg_match('/^\d{1,10}$/', strval($memberid))) {
+                        $members[] = '\''.$memberid.'\'';
+                    }
                 }
             }
             #Set list of members for select and list of members already registered
@@ -379,17 +385,19 @@ trait Updater
                 $regmembers = (new \SimbiatDB\Controller)->selectColumn('SELECT `characterid` FROM `'.$this->dbprefix.'character` WHERE `characterid` IN ('.$inmembers.')');
             }
             #Actually registering/updating members
-            foreach ($data['members'] as $memberid=>$member) {
-                if (preg_match('/^\d{1,10}$/', strval($memberid))) {
-                    if (in_array(strval($memberid), $regmembers) || (!in_array(strval($memberid), $regmembers) && $this->Update(strval($memberid), 'character') === true)) {
-                        $queries[] = [
-                            'INSERT INTO `'.$this->dbprefix.'linkshell_character` (`linkshellid`, `characterid`, `rankid`) VALUES (:linkshellid, :memberid, (SELECT `lsrankid` FROM `'.$this->dbprefix.'linkshell_rank` WHERE `rank`=:rank AND `rank` IS NOT NULL LIMIT 1)) ON DUPLICATE KEY UPDATE `rankid`=(SELECT `lsrankid` FROM `'.$this->dbprefix.'linkshell_rank` WHERE `rank`=:rank AND `rank` IS NOT NULL LIMIT 1);',
-                            [
-                                ':linkshellid'=>$data['linkshellid'],
-                                ':memberid'=>$memberid,
-                                ':rank'=>(empty($member['rank']) ? 'Member' : $member['rank'])
-                            ],
-                        ];
+            if (!empty($data['members'])) {
+                foreach ($data['members'] as $memberid=>$member) {
+                    if (preg_match('/^\d{1,10}$/', strval($memberid))) {
+                        if (in_array(strval($memberid), $regmembers) || (!in_array(strval($memberid), $regmembers) && $this->Update(strval($memberid), 'character') === true)) {
+                            $queries[] = [
+                                'INSERT INTO `'.$this->dbprefix.'linkshell_character` (`linkshellid`, `characterid`, `rankid`) VALUES (:linkshellid, :memberid, (SELECT `lsrankid` FROM `'.$this->dbprefix.'linkshell_rank` WHERE `rank`=:rank AND `rank` IS NOT NULL LIMIT 1)) ON DUPLICATE KEY UPDATE `rankid`=(SELECT `lsrankid` FROM `'.$this->dbprefix.'linkshell_rank` WHERE `rank`=:rank AND `rank` IS NOT NULL LIMIT 1);',
+                                [
+                                    ':linkshellid'=>$data['linkshellid'],
+                                    ':memberid'=>$memberid,
+                                    ':rank'=>(empty($member['rank']) ? 'Member' : $member['rank'])
+                                ],
+                            ];
+                        }
                     }
                 }
             }
@@ -435,9 +443,11 @@ trait Updater
             #Generating list of IDs for selects to process members
             $members = [];
             #There were cases when some characters had non-numeric symbols on certain HTML pages, this is more of a precaution now
-            foreach ($data['members'] as $memberid=>$member) {
-                if (preg_match('/^\d{1,10}$/', strval($memberid))) {
-                    $members[] = '\''.$memberid.'\'';
+            if (!empty($data['members'])) {
+                foreach ($data['members'] as $memberid=>$member) {
+                    if (preg_match('/^\d{1,10}$/', strval($memberid))) {
+                        $members[] = '\''.$memberid.'\'';
+                    }
                 }
             }
             #Set list of members for select and list of members already registered
@@ -449,17 +459,19 @@ trait Updater
                 $regmembers = (new \SimbiatDB\Controller)->selectColumn('SELECT `characterid` FROM `'.$this->dbprefix.'character` WHERE `characterid` IN ('.$inmembers.')');
             }
             #Actually registering/updating members
-            foreach ($data['members'] as $memberid=>$member) {
-                if (preg_match('/^\d{1,10}$/', strval($memberid))) {
-                    if (in_array(strval($memberid), $regmembers) || (!in_array(strval($memberid), $regmembers) && $this->Update(strval($memberid), 'character') === true)) {
-                        $queries[] = [
-                            'INSERT INTO `'.$this->dbprefix.'linkshell_character` (`linkshellid`, `characterid`, `rankid`) VALUES (:linkshellid, :memberid, (SELECT `lsrankid` FROM `'.$this->dbprefix.'linkshell_rank` WHERE `rank`=:rank AND `rank` IS NOT NULL LIMIT 1)) ON DUPLICATE KEY UPDATE `rankid`=(SELECT `lsrankid` FROM `'.$this->dbprefix.'linkshell_rank` WHERE `rank`=:rank AND `rank` IS NOT NULL LIMIT 1);',
-                            [
-                                ':linkshellid'=>$data['linkshellid'],
-                                ':memberid'=>$memberid,
-                                ':rank'=>(empty($member['rank']) ? 'Member' : $member['rank'])
-                            ],
-                        ];
+            if (!empty($data['members'])) {
+                foreach ($data['members'] as $memberid=>$member) {
+                    if (preg_match('/^\d{1,10}$/', strval($memberid))) {
+                        if (in_array(strval($memberid), $regmembers) || (!in_array(strval($memberid), $regmembers) && $this->Update(strval($memberid), 'character') === true)) {
+                            $queries[] = [
+                                'INSERT INTO `'.$this->dbprefix.'linkshell_character` (`linkshellid`, `characterid`, `rankid`) VALUES (:linkshellid, :memberid, (SELECT `lsrankid` FROM `'.$this->dbprefix.'linkshell_rank` WHERE `rank`=:rank AND `rank` IS NOT NULL LIMIT 1)) ON DUPLICATE KEY UPDATE `rankid`=(SELECT `lsrankid` FROM `'.$this->dbprefix.'linkshell_rank` WHERE `rank`=:rank AND `rank` IS NOT NULL LIMIT 1);',
+                                [
+                                    ':linkshellid'=>$data['linkshellid'],
+                                    ':memberid'=>$memberid,
+                                    ':rank'=>(empty($member['rank']) ? 'Member' : $member['rank'])
+                                ],
+                            ];
+                        }
                     }
                 }
             }
@@ -550,6 +562,24 @@ trait Updater
         }
     }
     
+    #Update achievements with missing details
+    public function UpdateAchievements(): bool
+    {
+        try {
+            #Selection is limited to 10 achievements at once in order not to backlog Cron too much
+            $achievements = (new \SimbiatDB\Controller)->selectAll('SELECT `'.$this->dbprefix.'achievement`.`achievementid`, `'.$this->dbprefix.'character_achievement`.`characterid` FROM `'.$this->dbprefix.'achievement` LEFT JOIN `'.$this->dbprefix.'character_achievement` ON `'.$this->dbprefix.'character_achievement`.`achievementid` = `'.$this->dbprefix.'achievement`.`achievementid` WHERE `category` IS NULL OR `howto` IS NULL GROUP BY `'.$this->dbprefix.'achievement`.`achievementid` LIMIT 10');
+            foreach ($achievements as $achievement) {
+                $bindings = $this->AchievementGrab($achievement['characterid'], $achievement['achievementid']);
+                if (!empty($bindings)) {
+                    (new \SimbiatDB\Controller)->query('INSERT INTO `'.$this->dbprefix.'achievement` SET `achievementid`='.$achievement['achievementid'].', `name`=:name, `icon`=:icon, `points`=:points, `category`=:category, `subcategory`=:subcategory'.(empty($bindings[':howto']) ? '' : ', `howto`=:howto').(empty($bindings[':title']) ? '' : ', `title`=:title').(empty($bindings[':item']) ? '' : ', `item`=:item').(empty($bindings[':itemicon']) ? '' : ', `itemicon`=:itemicon').(empty($bindings[':itemid']) ? '' : ', `itemid`=:itemid').' ON DUPLICATE KEY UPDATE `achievementid`='.$achievement['achievementid'].', `name`=:name, `icon`=:icon, `points`=:points, `category`=:category, `subcategory`=:subcategory'.(empty($bindings[':howto']) ? '' : ', `howto`=:howto').(empty($bindings[':title']) ? '' : ', `title`=:title').(empty($bindings[':item']) ? '' : ', `item`=:item').(empty($bindings[':itemicon']) ? '' : ', `itemicon`=:itemicon').(empty($bindings[':itemid']) ? '' : ', `itemid`=:itemid'), $bindings);
+                }
+            }
+            return true;
+        } catch(Exception $e) {
+            return false;
+        }
+    }
+       
     #Helper function to not duplicate code for removal from groups
     private function RemoveFromGroup(string $characterid, string $grouptype): array
     {
@@ -568,24 +598,6 @@ trait Updater
             ],
         ];
         return $queries;
-    }
-    
-    #Update achievements with missing details
-    public function UpdateAchievements(): bool
-    {
-        try {
-            #Selection is limited to 10 achievements at once in order not to backlog Cron too much
-            $achievements = (new \SimbiatDB\Controller)->selectAll('SELECT `'.$this->dbprefix.'achievement`.`achievementid`, `'.$this->dbprefix.'character_achievement`.`characterid` FROM `'.$this->dbprefix.'achievement` LEFT JOIN `'.$this->dbprefix.'character_achievement` ON `'.$this->dbprefix.'character_achievement`.`achievementid` = `'.$this->dbprefix.'achievement`.`achievementid` WHERE `category` IS NULL OR `howto` IS NULL GROUP BY `'.$this->dbprefix.'achievement`.`achievementid` LIMIT 10');
-            foreach ($achievements as $achievement) {
-                $bindings = $this->AchievementGrab($achievement['characterid'], $achievement['achievementid']);
-                if (!empty($bindings)) {
-                    (new \SimbiatDB\Controller)->query('INSERT INTO `'.$this->dbprefix.'achievement` SET `achievementid`='.$achievement['achievementid'].', `name`=:name, `icon`=:icon, `points`=:points, `category`=:category, `subcategory`=:subcategory'.(empty($bindings[':howto']) ? '' : ', `howto`=:howto').(empty($bindings[':title']) ? '' : ', `title`=:title').(empty($bindings[':item']) ? '' : ', `item`=:item').(empty($bindings[':itemicon']) ? '' : ', `itemicon`=:itemicon').(empty($bindings[':itemid']) ? '' : ', `itemid`=:itemid').' ON DUPLICATE KEY UPDATE `achievementid`='.$achievement['achievementid'].', `name`=:name, `icon`=:icon, `points`=:points, `category`=:category, `subcategory`=:subcategory'.(empty($bindings[':howto']) ? '' : ', `howto`=:howto').(empty($bindings[':title']) ? '' : ', `title`=:title').(empty($bindings[':item']) ? '' : ', `item`=:item').(empty($bindings[':itemicon']) ? '' : ', `itemicon`=:itemicon').(empty($bindings[':itemid']) ? '' : ', `itemid`=:itemid'), $bindings);
-                }
-            }
-            return true;
-        } catch(Exception $e) {
-            return false;
-        }
     }
     
     #Helper function to not duplicate code for mass removal from groups
@@ -610,16 +622,27 @@ trait Updater
     
     private function DeleteEntity(string $id, string $type): bool
     {
-        $result = (new \SimbiatDB\Controller)->query('UPDATE `'.$this->dbprefix.$type.'` SET `deleted` = UTC_DATE() WHERE `'.$type.'id` = :id', [':id'=>$id]);
-        if ($result === true) {
-            if ($type === 'character') {
-                $result = (new \SimbiatDB\Controller)->query($this->MassRemoveFromGroup($id, 'freecompany', '\'\''));
-                $result = (new \SimbiatDB\Controller)->query($this->MassRemoveFromGroup($id, 'linkshell', '\'\''));
-                $result = (new \SimbiatDB\Controller)->query($this->MassRemoveFromGroup($id, 'pvpteam', '\'\''));
+        $queries[] = [
+            'UPDATE `'.$this->dbprefix.$type.'` SET `deleted` = UTC_DATE() WHERE `'.$type.'id` = :id',
+            [':id'=>$id],
+        ];
+        if ($type !== 'character') {
+            #Remove characters from group
+            $queries = array_merge($queries, $this->MassRemoveFromGroup($id, $type, '\'\''));
+            #Remove free company ranks (not ranking!)
+            if ($type === 'freecompany') {
+                $queries[] = [
+                    'DELETE FROM `'.$this->dbprefix.'freecompany_rank` WHERE `'.$type.'id` = :id',
+                    [':id'=>$id],
+                ];
             }
         } else {
-            return $result;
+            #Remove character from groups
+            $queries = array_merge($queries, $this->RemoveFromGroup($id, 'freecompany', '\'\''));
+            $queries = array_merge($queries, $this->RemoveFromGroup($id, 'linkshell', '\'\''));
+            $queries = array_merge($queries, $this->RemoveFromGroup($id, 'pvpteam', '\'\''));
         }
+        $result  = (new \SimbiatDB\Controller)->query($queries);
         if ($result === true) {
             $this->CronRemove($id, $type);
         }

@@ -33,8 +33,7 @@ class FFTracker
             if ($data['404'] === true) {
                 #Means that entity was removed from Lodestone
                 #Mark as deleted in tracker
-                $this->DeleteEntity($id, $data['entitytype']);
-                return true;
+                return $this->DeleteEntity($id, $data['entitytype']);
             } else {
                 #Data was retrieved, update entity
                 return $this->EntityUpdate($data);

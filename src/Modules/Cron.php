@@ -16,7 +16,7 @@ trait Cron
             $this->getMaxlines();
             #Do actual updates with cron taking priority
             $entities = (new \SimbiatDB\Controller)->selectAll('(
-                	SELECT `type`, `id`, `nextrun`, 1 AS `priority` FROM `'.$this->dbprefix.'cron` ORDER BY `nextrun` ASC LIMIT :maxlines
+                	SELECT `type`, `id`, `nextrun`, IF(`type`=\'character\', 2, 1) AS `priority` FROM `'.$this->dbprefix.'cron` ORDER BY `nextrun` ASC LIMIT :maxlines
                 )
                 UNION ALL
                 (
