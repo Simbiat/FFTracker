@@ -35,7 +35,7 @@ trait Cron
                     ':maxlines'=>[$this->maxlines, 'int'],
                     ':maxage'=>[$this->maxage, 'int'],
                 ]
-                );
+            );
             if (!empty($entities)) {
                 foreach ($entities as $entity) {
                     #Updating entities. IDs are converted to string explicitly, since character and free company IDs should be returned as integers by default, but we need to use strings

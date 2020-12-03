@@ -45,7 +45,6 @@ trait Crest
             }
             #Preparing set of layers, since Lodestone stores crests as 3 (or less) separate images
             $layers = array();
-            $dimensions = getimagesize($images[0]);
             foreach ($images as $key=>$image) {
                 $layers[$key] = @imagecreatefrompng($image);
                 if (empty($layers[$key])) {
@@ -54,7 +53,7 @@ trait Crest
                 }
             }
             #Create image object
-            $image = imagecreatetruecolor($dimensions[0], $dimensions[1]);
+            $image = imagecreatetruecolor(128, 128);
             #Set transparency
             imagealphablending($image, true);
             imagesavealpha($image, true);
@@ -62,7 +61,7 @@ trait Crest
             imagefill($image, 0, 0, imagecolorallocatealpha($image, 255, 0, 0, 127));
             #Copy each Lodestone image onto the image object
             for ($i = 0; $i < count($layers); $i++) {
-                imagecopy($image, $layers[$i], 0, 0, 0, 0, $dimensions[0], $dimensions[1]);
+                imagecopy($image, $layers[$i], 0, 0, 0, 0, 128, 128);
                 #Destroy layer to free some memory
                 imagedestroy($layers[$i]);
             }
