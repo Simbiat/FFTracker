@@ -161,7 +161,7 @@ trait Updater
             if (!empty($data['achievements']) && is_array($data['achievements'])) {
                 foreach ($data['achievements'] as $achievementid=>$item) {
                     $queries[] = [
-                        'INSERT INTO `'.$this->dbprefix.'achievement` SET `achievementid`=:achievementid, `name`=:name, `icon`=:icon, `points`=:points ON DUPLICATE KEY UPDATE `name`=:name, `icon`=:icon, `points`=:points;',
+                        'INSERT INTO `'.$this->dbprefix.'achievement` SET `achievementid`=:achievementid, `name`=:name, `icon`=:icon, `points`=:points ON DUPLICATE KEY UPDATE `updated`=`updated`, `name`=:name, `icon`=:icon, `points`=:points;',
                         [
                             ':achievementid'=>$achievementid,
                             ':name'=>$item['name'],
@@ -567,7 +567,12 @@ trait Updater
     {
         try {
             #Selection is limited to 10 achievements at once in order not to backlog Cron too much
-            $achievements = (new \SimbiatDB\Controller)->selectAll('SELECT `'.$this->dbprefix.'achievement`.`achievementid`, `'.$this->dbprefix.'character_achievement`.`characterid` FROM `'.$this->dbprefix.'achievement` LEFT JOIN `'.$this->dbprefix.'character_achievement` ON `'.$this->dbprefix.'character_achievement`.`achievementid` = `'.$this->dbprefix.'achievement`.`achievementid` WHERE `category` IS NULL OR `howto` IS NULL GROUP BY `'.$this->dbprefix.'achievement`.`achievementid` LIMIT 10');
+            $achievements = (new \SimbiatDB\Controller)->selectAll(
+                'SELECT `'.$this->dbprefix.'achievement`.`achievementid`, `'.$this->dbprefix.'character_achievement`.`characterid` FROM `'.$this->dbprefix.'achievement` LEFT JOIN `'.$this->dbprefix.'character_achievement` ON `'.$this->dbprefix.'character_achievement`.`achievementid` = `'.$this->dbprefix.'achievement`.`achievementid` WHERE `category` IS NULL OR `howto` IS NULL OR `updated` <= DATE_ADD(UTC_TIMESTAMP(), INTERVAL -:maxage DAY) GROUP BY `'.$this->dbprefix.'achievement`.`achievementid` LIMIT 10',
+                [
+                    ':maxage'=>[$this->maxage, 'int'],
+                ]
+                );
             foreach ($achievements as $achievement) {
                 $bindings = $this->AchievementGrab($achievement['characterid'], $achievement['achievementid']);
                 if (!empty($bindings)) {
