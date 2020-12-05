@@ -205,16 +205,18 @@ trait Updater
     private function CompanyUpdate(array $data): bool
     {
         try {
+            #Attempt to get crest
+            $data['crest'] = $this->CrestMerge($data['freecompanyid'], $data['crest']);
             #Main query to insert or update a Free Company
             $queries[] = [
                 'INSERT INTO `'.$this->dbprefix.'freecompany` (
-                    `freecompanyid`, `name`, `serverid`, `formed`, `registered`, `updated`, `deleted`, `grandcompanyid`, `tag`, `rank`, `slogan`, `activeid`, `recruitment`, `communityid`, `estate_zone`, `estateid`, `estate_message`, `Role-playing`, `Leveling`, `Casual`, `Hardcore`, `Dungeons`, `Guildhests`, `Trials`, `Raids`, `PvP`, `Tank`, `Healer`, `DPS`, `Crafter`, `Gatherer`
+                    `freecompanyid`, `name`, `serverid`, `formed`, `registered`, `updated`, `deleted`, `grandcompanyid`, `tag`, `crest`, `rank`, `slogan`, `activeid`, `recruitment`, `communityid`, `estate_zone`, `estateid`, `estate_message`, `Role-playing`, `Leveling`, `Casual`, `Hardcore`, `Dungeons`, `Guildhests`, `Trials`, `Raids`, `PvP`, `Tank`, `Healer`, `DPS`, `Crafter`, `Gatherer`
                 )
                 VALUES (
-                    :freecompanyid, :name, (SELECT `serverid` FROM `'.$this->dbprefix.'server` WHERE `server`=:server), :formed, UTC_DATE(), UTC_TIMESTAMP(), NULL, (SELECT `gcrankid` FROM `'.$this->dbprefix.'grandcompany_rank` WHERE `gc_name`=:grandcompany ORDER BY `gcrankid` ASC LIMIT 1), :tag, :rank, :slogan, (SELECT `activeid` FROM `'.$this->dbprefix.'timeactive` WHERE `active`=:active AND `active` IS NOT NULL LIMIT 1), :recruitment, :communityid, :estate_zone, (SELECT `estateid` FROM `'.$this->dbprefix.'estate` WHERE CONCAT(\'Plot \', `plot`, \', \', `ward`, \' Ward, \', `area`, \' (\', CASE WHEN `size` = 1 THEN \'Small\' WHEN `size` = 2 THEN \'Medium\' WHEN `size` = 3 THEN \'Large\' END, \')\')=:estate_address LIMIT 1), :estate_message, :roleplaying, :leveling, :casual, :hardcore, :dungeons, :guildhests, :trials, :raids, :pvp, :tank, :healer, :dps, :crafter, :gatherer
+                    :freecompanyid, :name, (SELECT `serverid` FROM `'.$this->dbprefix.'server` WHERE `server`=:server), :formed, UTC_DATE(), UTC_TIMESTAMP(), NULL, (SELECT `gcrankid` FROM `'.$this->dbprefix.'grandcompany_rank` WHERE `gc_name`=:grandcompany ORDER BY `gcrankid` ASC LIMIT 1), :tag, :crest, :rank, :slogan, (SELECT `activeid` FROM `'.$this->dbprefix.'timeactive` WHERE `active`=:active AND `active` IS NOT NULL LIMIT 1), :recruitment, :communityid, :estate_zone, (SELECT `estateid` FROM `'.$this->dbprefix.'estate` WHERE CONCAT(\'Plot \', `plot`, \', \', `ward`, \' Ward, \', `area`, \' (\', CASE WHEN `size` = 1 THEN \'Small\' WHEN `size` = 2 THEN \'Medium\' WHEN `size` = 3 THEN \'Large\' END, \')\')=:estate_address LIMIT 1), :estate_message, :roleplaying, :leveling, :casual, :hardcore, :dungeons, :guildhests, :trials, :raids, :pvp, :tank, :healer, :dps, :crafter, :gatherer
                 )
                 ON DUPLICATE KEY UPDATE
-                    `name`=:name, `serverid`=(SELECT `serverid` FROM `'.$this->dbprefix.'server` WHERE `server`=:server), `updated`=UTC_TIMESTAMP(), `deleted`=NULL, `tag`=:tag, `rank`=:rank, `slogan`=:slogan, `activeid`=(SELECT `activeid` FROM `'.$this->dbprefix.'timeactive` WHERE `active`=:active AND `active` IS NOT NULL LIMIT 1), `recruitment`=:recruitment, `communityid`=:communityid, `estate_zone`=:estate_zone, `estateid`=(SELECT `estateid` FROM `'.$this->dbprefix.'estate` WHERE CONCAT(\'Plot \', `plot`, \', \', `ward`, \' Ward, \', `area`, \' (\', CASE WHEN `size` = 1 THEN \'Small\' WHEN `size` = 2 THEN \'Medium\' WHEN `size` = 3 THEN \'Large\' END, \')\')=:estate_address LIMIT 1), `estate_message`=:estate_message, `Role-playing`=:roleplaying, `Leveling`=:leveling, `Casual`=:casual, `Hardcore`=:hardcore, `Dungeons`=:dungeons, `Guildhests`=:guildhests, `Trials`=:trials, `Raids`=:raids, `PvP`=:pvp, `Tank`=:tank, `Healer`=:healer, `DPS`=:dps, `Crafter`=:crafter, `Gatherer`=:gatherer;',
+                    `name`=:name, `serverid`=(SELECT `serverid` FROM `'.$this->dbprefix.'server` WHERE `server`=:server), `updated`=UTC_TIMESTAMP(), `deleted`=NULL, `tag`=:tag, `crest`=COALESCE(:crest, `crest`), `rank`=:rank, `slogan`=:slogan, `activeid`=(SELECT `activeid` FROM `'.$this->dbprefix.'timeactive` WHERE `active`=:active AND `active` IS NOT NULL LIMIT 1), `recruitment`=:recruitment, `communityid`=:communityid, `estate_zone`=:estate_zone, `estateid`=(SELECT `estateid` FROM `'.$this->dbprefix.'estate` WHERE CONCAT(\'Plot \', `plot`, \', \', `ward`, \' Ward, \', `area`, \' (\', CASE WHEN `size` = 1 THEN \'Small\' WHEN `size` = 2 THEN \'Medium\' WHEN `size` = 3 THEN \'Large\' END, \')\')=:estate_address LIMIT 1), `estate_message`=:estate_message, `Role-playing`=:roleplaying, `Leveling`=:leveling, `Casual`=:casual, `Hardcore`=:hardcore, `Dungeons`=:dungeons, `Guildhests`=:guildhests, `Trials`=:trials, `Raids`=:raids, `PvP`=:pvp, `Tank`=:tank, `Healer`=:healer, `DPS`=:dps, `Crafter`=:crafter, `Gatherer`=:gatherer;',
                 [
                     ':freecompanyid'=>$data['freecompanyid'],
                     ':name'=>$data['name'],
@@ -222,6 +224,10 @@ trait Updater
                     ':formed'=>[$data['formed'], 'date'],
                     ':grandcompany'=>$data['grandCompany'],
                     ':tag'=>$data['tag'],
+                    ':crest'=>[
+                            (empty($data['crest']) ? NULL : $data['crest']),
+                            (empty($data['crest']) ? 'null' : 'string'),
+                    ],
                     ':rank'=>$data['rank'],
                     ':slogan'=>[
                             (empty($data['slogan']) ? NULL : $data['slogan']),
@@ -330,8 +336,6 @@ trait Updater
             $queries = array_merge($queries, $this->MassRemoveFromGroup($data['freecompanyid'], 'freecompany', $inmembers));
             #Running the queries we've accumulated
             (new \SimbiatDB\Controller)->query($queries);
-            #Merge crest
-            $this->CrestMerge($data['freecompanyid'], $data['crest']);
             #Remove cron entry (if exists)
             $this->CronRemove($data['freecompanyid'], 'freecompany');
             return true;
@@ -492,9 +496,11 @@ trait Updater
     private function PVPUpdate(array $data): bool
     {
         try {
+            #Attempt to get crest
+            $data['crest'] = $this->CrestMerge($data['pvpteamid'], $data['crest']);
             #Main query to insert or update a PvP Team
             $queries[] = [
-                'INSERT INTO `'.$this->dbprefix.'pvpteam` (`pvpteamid`, `name`, `formed`, `registered`, `updated`, `deleted`, `datacenterid`, `communityid`) VALUES (:pvpteamid, :name, :formed, UTC_DATE(), UTC_TIMESTAMP(), NULL, (SELECT `serverid` FROM `'.$this->dbprefix.'server` WHERE `datacenter`=:datacenter ORDER BY `serverid` LIMIT 1), :communityid) ON DUPLICATE KEY UPDATE `name`=:name, `formed`=:formed, `updated`=UTC_TIMESTAMP(), `deleted`=NULL, `datacenterid`=(SELECT `serverid` FROM `'.$this->dbprefix.'server` WHERE `datacenter`=:datacenter ORDER BY `serverid` LIMIT 1), `communityid`=:communityid;',
+                'INSERT INTO `'.$this->dbprefix.'pvpteam` (`pvpteamid`, `name`, `formed`, `registered`, `updated`, `deleted`, `datacenterid`, `communityid`, `crest`) VALUES (:pvpteamid, :name, :formed, UTC_DATE(), UTC_TIMESTAMP(), NULL, (SELECT `serverid` FROM `'.$this->dbprefix.'server` WHERE `datacenter`=:datacenter ORDER BY `serverid` LIMIT 1), :communityid, :crest) ON DUPLICATE KEY UPDATE `name`=:name, `formed`=:formed, `updated`=UTC_TIMESTAMP(), `deleted`=NULL, `datacenterid`=(SELECT `serverid` FROM `'.$this->dbprefix.'server` WHERE `datacenter`=:datacenter ORDER BY `serverid` LIMIT 1), `communityid`=:communityid, `crest`=COALESCE(:crest, `crest`);',
                 [
                     ':pvpteamid'=>$data['pvpteamid'],
                     ':datacenter'=>$data['dataCenter'],
@@ -504,6 +510,10 @@ trait Updater
                             (empty($data['communityid']) ? NULL : $data['communityid']),
                             (empty($data['communityid']) ? 'null' : 'string'),
                     ],
+                    ':crest'=>[
+                            (empty($data['crest']) ? NULL : $data['crest']),
+                            (empty($data['crest']) ? 'null' : 'string'),
+                    ]
                 ],
             ];
             #Register PvP Team name if it's not registered already
@@ -550,8 +560,6 @@ trait Updater
             $queries = array_merge($queries, $this->MassRemoveFromGroup($data['pvpteamid'], 'pvpteam', $inmembers));
             #Running the queries we've accumulated
             (new \SimbiatDB\Controller)->query($queries);
-            #Merge crest
-            $this->CrestMerge($data['pvpteamid'], $data['crest']);
             #Remove cron entry (if exists)
             $this->CronRemove($data['pvpteamid'], 'pvpteam');
             return true;

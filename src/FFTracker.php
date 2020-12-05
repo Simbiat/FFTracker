@@ -15,14 +15,17 @@ class FFTracker
     use Modules\Crest;
     use Modules\Output;
     
-    public function __construct(string $dbprefix = '')
+    public function __construct(string $dbprefix = '', bool $nodb = false)
     {
-        $this->setDbPrefix($dbprefix);
-        #Get settings from Database
-        $this->getLanguage();
-        $this->getUseragent();
-        $this->getFcCrestPath();
-        $this->getPvpCrestPath();
+        #We do not need DB for ImageShow() function, but it is requried for the rest
+        if ($nodb === false) {
+            $this->setDbPrefix($dbprefix);
+            #Get settings from Database
+            $this->getLanguage();
+            $this->getUseragent();
+            $this->getFcCrestPath();
+            $this->getPvpCrestPath();
+        }
     }
     
     public function Update(string $id, string $type = '')

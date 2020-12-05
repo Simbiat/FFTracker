@@ -78,6 +78,7 @@ trait Output
         if (empty($data) || !is_array($data)) {
             return [];
         }
+        
         #Get old names
         $data['oldnames'] = (new \SimbiatDB\Controller)->selectColumn('SELECT `name` FROM `'.$this->dbprefix.'freecompany_names` WHERE `freecompanyid`=:id AND `name`!=:name', [':id'=>$id, ':name'=>$data['name']]);
         #Get members
