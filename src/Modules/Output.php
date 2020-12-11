@@ -159,6 +159,7 @@ trait Output
     #Function to search for entities
     public function Search(string $what = '')
     {
+        $what = preg_replace('/(^[-+@<>()~*\'\s]*)|([-+@<>()~*\'\s]*$)/mi', '', $what);
         if ($what === '') {
             #Count entities
             $result['counts'] = (new \SimbiatDB\Controller)->selectPair('

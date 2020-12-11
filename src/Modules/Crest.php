@@ -83,7 +83,7 @@ trait Crest
                 $layers[$key] = @imagecreatefrompng($image);
                 if (empty($layers[$key])) {
                     #This means that we failed to get the image thus final crest will either fail or be corrupt, thus exiting early
-                    return false;
+                    return '';
                 }
             }
             #Create image object
