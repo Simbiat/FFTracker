@@ -213,28 +213,56 @@ trait Grabber
         if (empty($data['characters'][$character]['achievements'][$achievement])) {
             return [];
         }
+        #Try to get achievement ID as seen in Lodestone database (playguide)
+        $data = $Lodestone->searchDatabase('achievement', 0, 0, $data['characters'][$character]['achievements'][$achievement]['name'])->getResult();
+        #Remove counts elements from achievement database
+        unset($data['database']['achievement']['pageCurrent'], $data['database']['achievement']['pageTotal'], $data['database']['achievement']['total']);
+        #Flip the array of achievements (if any) to ease searching for the right element
+        $data['database']['achievement'] = array_flip(array_combine(array_keys($data['database']['achievement']), array_column($data['database']['achievement'], 'name')));
+        #Set dbid
+        if (empty($data['database']['achievement'][$data['characters'][$character]['achievements'][$achievement]['name']])) {
+            $data['characters'][$character]['achievements'][$achievement]['dbid'] = NULL;
+        } else {
+            $data['characters'][$character]['achievements'][$achievement]['dbid'] = $data['database']['achievement'][$data['characters'][$character]['achievements'][$achievement]['name']];
+        }
         $data = $data['characters'][$character]['achievements'][$achievement];
         #Prepare bindings for actual update
         $bindings = [];
+        $bindings[':achievementid'] = $achievement;
         $bindings[':name'] = $data['name'];
         $bindings[':icon'] = str_replace('https://img.finalfantasyxiv.com/lds/pc/global/images/itemicon/', '', $data['icon']);
         $bindings[':points'] = $data['points'];
         $bindings[':category'] = $data['category'];
         $bindings[':subcategory'] = $data['subcategory'];
-        if (!empty($data['howto'])) {
+        if (empty($data['howto'])) {
+            $bindings[':howto'] = [NULL, 'null'];
+        } else {
             $bindings[':howto'] = $data['howto'];
         }
-        if (!empty($data['title'])) {
+        if (empty($data['title'])) {
+            $bindings[':title'] = [NULL, 'null'];
+        } else {
             $bindings[':title'] = $data['title'];
         }
-        if (!empty($data['item']['name'])) {
+        if (empty($data['item']['name'])) {
+            $bindings[':item'] = [NULL, 'null'];
+        } else {
             $bindings[':item'] = $data['item']['name'];
         }
-        if (!empty($data['item']['icon'])) {
+        if (empty($data['item']['icon'])) {
+            $bindings[':itemicon'] = [NULL, 'null'];
+        } else {
             $bindings[':itemicon'] = str_replace('https://img.finalfantasyxiv.com/lds/pc/global/images/itemicon/', '', $data['item']['icon']);
         }
-        if (!empty($data['item']['id'])) {
+        if (empty($data['item']['id'])) {
+            $bindings[':itemid'] = [NULL, 'null'];
+        } else {
             $bindings[':itemid'] = $data['item']['id'];
+        }
+        if (empty($data['dbid'])) {
+            $bindings[':dbid'] = [NULL, 'null'];
+        } else {
+            $bindings[':dbid'] = $data['dbid'];
         }
         return $bindings;
     }

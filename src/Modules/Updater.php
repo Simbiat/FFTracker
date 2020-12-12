@@ -576,7 +576,7 @@ trait Updater
         try {
             #Selection is limited to 10 achievements at once in order not to backlog Cron too much
             $achievements = (new \SimbiatDB\Controller)->selectAll(
-                'SELECT `'.$this->dbprefix.'achievement`.`achievementid`, `'.$this->dbprefix.'character_achievement`.`characterid` FROM `'.$this->dbprefix.'achievement` LEFT JOIN `'.$this->dbprefix.'character_achievement` ON `'.$this->dbprefix.'character_achievement`.`achievementid` = `'.$this->dbprefix.'achievement`.`achievementid` WHERE `category` IS NULL OR `howto` IS NULL OR `updated` <= DATE_ADD(UTC_TIMESTAMP(), INTERVAL -:maxage DAY) GROUP BY `'.$this->dbprefix.'achievement`.`achievementid` LIMIT 10',
+                'SELECT `'.$this->dbprefix.'achievement`.`achievementid`, `'.$this->dbprefix.'character_achievement`.`characterid` FROM `'.$this->dbprefix.'achievement` LEFT JOIN `'.$this->dbprefix.'character_achievement` ON `'.$this->dbprefix.'character_achievement`.`achievementid` = `'.$this->dbprefix.'achievement`.`achievementid` WHERE `category` IS NULL OR `howto` IS NULL OR `dbid` IS NULL OR `updated` <= DATE_ADD(UTC_TIMESTAMP(), INTERVAL -:maxage DAY) GROUP BY `'.$this->dbprefix.'achievement`.`achievementid` LIMIT 10',
                 [
                     ':maxage'=>[$this->maxage, 'int'],
                 ]
@@ -584,7 +584,7 @@ trait Updater
             foreach ($achievements as $achievement) {
                 $bindings = $this->AchievementGrab($achievement['characterid'], $achievement['achievementid']);
                 if (!empty($bindings)) {
-                    (new \SimbiatDB\Controller)->query('INSERT INTO `'.$this->dbprefix.'achievement` SET `achievementid`='.$achievement['achievementid'].', `name`=:name, `icon`=:icon, `points`=:points, `category`=:category, `subcategory`=:subcategory'.(empty($bindings[':howto']) ? '' : ', `howto`=:howto').(empty($bindings[':title']) ? '' : ', `title`=:title').(empty($bindings[':item']) ? '' : ', `item`=:item').(empty($bindings[':itemicon']) ? '' : ', `itemicon`=:itemicon').(empty($bindings[':itemid']) ? '' : ', `itemid`=:itemid').' ON DUPLICATE KEY UPDATE `achievementid`='.$achievement['achievementid'].', `name`=:name, `icon`=:icon, `points`=:points, `category`=:category, `subcategory`=:subcategory'.(empty($bindings[':howto']) ? '' : ', `howto`=:howto').(empty($bindings[':title']) ? '' : ', `title`=:title').(empty($bindings[':item']) ? '' : ', `item`=:item').(empty($bindings[':itemicon']) ? '' : ', `itemicon`=:itemicon').(empty($bindings[':itemid']) ? '' : ', `itemid`=:itemid'), $bindings);
+                    (new \SimbiatDB\Controller)->query('INSERT INTO `'.$this->dbprefix.'achievement` SET `achievementid`=:achievementid, `name`=:name, `icon`=:icon, `points`=:points, `category`=:category, `subcategory`=:subcategory, `howto`=:howto, `title`=:title, `item`=:item, `itemicon`=:itemicon, `itemid`=:itemid, `dbid`=:dbid ON DUPLICATE KEY UPDATE `achievementid`=:achievementid, `name`=:name, `icon`=:icon, `points`=:points, `category`=:category, `subcategory`=:subcategory, `howto`=:howto, `title`=:title, `item`=:item, `itemicon`=:itemicon, `itemid`=:itemid, `dbid`=:dbid', $bindings);
                 }
             }
             return true;
