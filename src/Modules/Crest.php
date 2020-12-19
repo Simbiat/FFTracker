@@ -104,6 +104,10 @@ trait Crest
             #Explicitely destroy image object
             imagedestroy($image);
             #Get hash of the file
+            if (!file_exists($imgfolder.$groupid.'.png')) {
+                #Failed to save the image
+                return '';
+            }
             $hash = hash_file('sha3-256', $imgfolder.$groupid.'.png');
             #Check if file with hash name exists
             if (!file_exists($imgfolder.$hash.'.png')) {
