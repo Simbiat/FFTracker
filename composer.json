@@ -16,9 +16,9 @@
     "require": {
         "php": "^7.4",
         "ext-gd": "*",
-        "simbiat/lodestone-php": "^1.22.0+20201213",
-        "simbiat/database": "^1.2.0+20201219",
-        "simbiat/arrayhelpers": "^1.0.0+20201219"
+        "simbiat/lodestone-php": "^1.23.0+20201226",
+        "simbiat/database": "^1.3.0+20201229",
+        "simbiat/arrayhelpers": "^1.0.3+20201227"
     },
     "autoload": {
         "psr-4": {

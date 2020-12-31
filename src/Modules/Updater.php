@@ -289,15 +289,17 @@ trait Updater
                 }
             }
             #Adding ranking at this point since it needs members count, that we just got
-            $queries[] = [
-                'INSERT INTO `'.$this->dbprefix.'freecompany_ranking` (`freecompanyid`, `date`, `weekly`, `monthly`, `members`) SELECT :freecompanyid as `freecompanyid`, UTC_DATE() as `date`, :weekly as `weekly`, :monthly as `monthly`, :members as `members` FROM (SELECT `freecompanyid`, `date`, `weekly`, `monthly`, `members` FROM `'.$this->dbprefix.'freecompany_ranking` WHERE `freecompanyid`=:freecompanyid ORDER BY `date` DESC LIMIT 1) AS t HAVING `weekly` <> :weekly AND `monthly` <> :monthly ON DUPLICATE KEY UPDATE `weekly`=:weekly, `monthly`=:monthly, `members`=:members;',
-                [
-                    ':freecompanyid'=>$data['freecompanyid'],
-                    ':weekly'=>$data['weekly_rank'],
-                    ':monthly'=>$data['monthly_rank'],
-                    ':members'=>count($members),
-                ],
-            ];
+            if (!empty($data['weekly_rank']) && !empty($data['monthly_rank'])) {
+                $queries[] = [
+                    'INSERT INTO `'.$this->dbprefix.'freecompany_ranking` (`freecompanyid`, `date`, `weekly`, `monthly`, `members`) SELECT * FROM (SELECT :freecompanyid AS `freecompanyid`, UTC_DATE() AS `date`, :weekly AS `weekly`, :monthly AS `monthly`, :members AS `members` FROM DUAL WHERE :freecompanyid NOT IN (SELECT `freecompanyid` FROM (SELECT * FROM `ff__freecompany_ranking` WHERE `freecompanyid`=:freecompanyid ORDER BY `date` DESC LIMIT 1) `lastrecord` WHERE `weekly`=:weekly AND `monthly`=:monthly) LIMIT 1) `actualinsert` ON DUPLICATE KEY UPDATE `weekly`=:weekly, `monthly`=:monthly, `members`=:members;',
+                    [
+                        ':freecompanyid'=>$data['freecompanyid'],
+                        ':weekly'=>$data['weekly_rank'],
+                        ':monthly'=>$data['monthly_rank'],
+                        ':members'=>count($members),
+                    ],
+                ];
+            }
             #Set list of members for select and list of members already registered
             if (empty($members)) {
                 $inmembers = '\'\'';

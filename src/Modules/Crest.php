@@ -26,14 +26,27 @@ trait Crest
                     [':id'=>basename($imgname, '.png')]
                 ));
                 if (empty($crest) || !file_exists($this->pvpcrestpath.$crest.'.png')) {
+                    #Use placeholder
                     $imgname = dirname(dirname(__FILE__)).'/Images/fftracker.png';
                 } else {
                     $imgname = $this->pvpcrestpath.$crest.'.png';
                 }
             }
         } else {
-            #Use placeholder
-            $imgname = dirname(dirname(__FILE__)).'/Images/fftracker.png';
+            #Perhaps we are trying to access the image using the hash
+            if (preg_match('/[a-zA-Z0-9]{64}\.png/mi', $imgname)) {
+                if (!file_exists($this->pvpcrestpath.$imgname)) {
+                    $imgname = $this->pvpcrestpath.$imgname;
+                } elseif (!file_exists($this->fccrestpath.$imgname)) {
+                    $imgname = $this->fccrestpath.$imgname;
+                } else {
+                    #Use placeholder
+                    $imgname = dirname(dirname(__FILE__)).'/Images/fftracker.png';
+                }
+            } else {
+                #Use placeholder
+                $imgname = dirname(dirname(__FILE__)).'/Images/fftracker.png';
+            }
         }
         #Pass the file through to browser
         $fp = fopen($imgname, 'rb');
