@@ -30,7 +30,7 @@ trait Cron
                 		(SELECT \'pvpteam\' AS `type`, `pvpteamid` AS `id`, `updated` AS `nextrun` FROM `'.$this->dbprefix.'pvpteam` WHERE `deleted` IS NULL ORDER BY `updated` ASC LIMIT :maxlines)
                 	) entities WHERE `nextrun` <= DATE_ADD(UTC_TIMESTAMP(), INTERVAL -:maxage DAY) AND `id` NOT IN (SELECT `id` FROM `'.$this->dbprefix.'cron`) ORDER BY `nextrun` ASC LIMIT :maxlines
                 )
-                ORDER BY `priority` DESC, `nextrun` ASC LIMIT :maxlines',
+                ORDER BY `nextrun` ASC, `priority` DESC LIMIT :maxlines',
                 [
                     ':maxlines'=>[$this->maxlines, 'int'],
                     ':maxage'=>[$this->maxage, 'int'],
