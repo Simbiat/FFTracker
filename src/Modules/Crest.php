@@ -68,7 +68,7 @@ trait Crest
         #Pass the file through to browser
         $fp = fopen($imgname, 'rb');
         header('Cache-Control: public, max-age=15552000');
-        header('Content-Type: image/png');
+        header('Content-Type: '.mime_content_type($imgname));
         header('Content-Length: ' . filesize($imgname));
         fpassthru($fp);
         #Ensure we exit
