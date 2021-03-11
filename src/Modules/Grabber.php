@@ -6,7 +6,7 @@ namespace FFTracker\Modules;
 trait Grabber
 {
     #Attempt to grab data
-    private function LodestoneGrab(string $id, string $type = '')
+    private function LodestoneGrab(string $id, string $type = ''): string|array
     {
         switch ($type) {
             case 'character':
@@ -84,7 +84,7 @@ trait Grabber
         return $data;
     }
     
-    private function CharacterGrab(string $id)
+    private function CharacterGrab(string $id): string|array
     {
         $Lodestone = (new \Lodestone\Api);
         $data = $Lodestone->setLanguage($this->language)->setUseragent($this->useragent)->getCharacter($id)->getCharacterJobs($id)->getCharacterAchievements($id, false, 0, false, false, true)->getResult();
@@ -108,7 +108,7 @@ trait Grabber
         return $data;
     }
     
-    private function CompanyGrab(string $id)
+    private function CompanyGrab(string $id): string|array
     {
         $Lodestone = (new \Lodestone\Api);
         $data = $Lodestone->setLanguage($this->language)->setUseragent($this->useragent)->getFreeCompany($id)->getFreeCompanyMembers($id, 0)->getResult();
@@ -132,7 +132,7 @@ trait Grabber
         return $data;
     }
     
-    private function LinkshellGrab(string $id)
+    private function LinkshellGrab(string $id): string|array
     {
         $Lodestone = (new \Lodestone\Api);
         $data = $Lodestone->setLanguage($this->language)->setUseragent($this->useragent)->getLinkshellMembers($id, 0)->getResult();
@@ -156,7 +156,7 @@ trait Grabber
         return $data;
     }
     
-    private function CrossLinkGrab(string $id)
+    private function CrossLinkGrab(string $id): string|array
     {
         $Lodestone = (new \Lodestone\Api);
         $data = $Lodestone->setLanguage($this->language)->setUseragent($this->useragent)->getLinkshellMembers($id, 0)->getResult();
@@ -180,7 +180,7 @@ trait Grabber
         return $data;
     }
     
-    private function PVPGrab(string $id)
+    private function PVPGrab(string $id): string|array
     {
         $Lodestone = (new \Lodestone\Api);
         $data = $Lodestone->getPvPTeam($id)->getResult();

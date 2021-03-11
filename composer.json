@@ -16,7 +16,7 @@
     "require": {
         "php": "^7.4",
         "ext-gd": "*",
-        "simbiat/lodestone-php": "^1.23.0+20201226",
+        "simbiat/lodestone-parser": "*",
         "simbiat/database": "^1.3.0+20201229",
         "simbiat/arrayhelpers": "^1.0.3+20201227"
     },

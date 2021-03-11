@@ -7,26 +7,14 @@ trait Output
     #Generalized function to get entity data
     public function TrackerGrab(string $id, string $type): array
     {
-        switch ($type) {
-            case 'character':
-                $data = $this->GetCharacter($id);
-                break;
-            case 'achievement':
-                $data = $this->GetAchievement($id);
-                break;
-            case 'freecompany':
-                $data = $this->GetCompany($id);
-                break;
-            case 'pvpteam':
-                $data = $this->GetPVP($id);
-                break;
-            case 'linkshell':
-            case 'crossworld_linkshell':
-            case 'crossworldlinkshell':
-                $data = $this->GetLinkshell($id);
-                break;
-        }
-        return $data;
+        return match($type) {
+            'character' => $this->GetCharacter($id),
+            'achievement' => $this->GetAchievement($id),
+            'freecompany' => $this->GetCompany($id),
+            'pvpteam' => $this->GetPVP($id),
+            'linkshell', 'crossworld_linkshell', 'crossworldlinkshell' => $this->GetLinkshell($id),
+            default => [],
+        };
     }
     
     private function GetCharacter(string $id): array
@@ -167,7 +155,7 @@ trait Output
     }
     
     #Function to search for entities
-    public function Search(string $what = '')
+    public function Search(string $what = ''): array
     {
         $dbcon = (new \SimbiatDB\Controller);
         $what = preg_replace('/(^[-+@<>()~*\'\s]*)|([-+@<>()~*\'\s]*$)/mi', '', $what);
@@ -235,7 +223,6 @@ trait Output
         if (!in_array($type, ['genetics', 'astrology', 'characters', 'freecompanies', 'cities', 'grandcompanies', 'servers', 'achievements', 'timelines', 'other'])) {
             $type = 'genetics';
         }
-        
         switch ($type) {
             case 'genetics':
                 #Get statistics by clan
@@ -494,7 +481,6 @@ trait Output
             $data['pvpteam']['crests'] = $dbcon->countUnique($this->dbprefix.'pvpteam', 'crest', '`'.$this->dbprefix.'pvpteam`.`deleted` IS NULL AND `'.$this->dbprefix.'pvpteam`.`crest` IS NOT NULL', '', 'INNER', '', '', 'DESC', 20);
             break;
         }
-        
         unset($dbcon, $ArrayHelpers, $Lodestone);
         return $data;
     }

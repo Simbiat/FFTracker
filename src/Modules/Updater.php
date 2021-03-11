@@ -8,25 +8,14 @@ trait Updater
     #Update data
     private function EntityUpdate(array $data): bool
     {
-        $result = false;
-        switch ($data['entitytype']) {
-            case 'character':
-                $result = $this->CharacterUpdate($data);
-                break;
-            case 'freecompany':
-                $result = $this->CompanyUpdate($data);
-                break;
-            case 'linkshell':
-                $result = $this->LinkshellUpdate($data);
-                break;
-            case 'crossworldlinkshell':
-                $result = $this->CrossLinkUpdate($data);
-                break;
-            case 'pvpteam':
-                $result = $this->PVPUpdate($data);
-                break;
-        }
-        return $result;
+        return match($data['entitytype']) {
+            'character' => $this->CharacterUpdate($data),
+            'freecompany' => $this->CompanyUpdate($data),
+            'linkshell' => $this->LinkshellUpdate($data),
+            'crossworldlinkshell' => $this->CrossLinkUpdate($data),
+            'pvpteam' => $this->PVPUpdate($data),
+            default => false,
+        };
     }
     
     private function CharacterUpdate(array $data): bool

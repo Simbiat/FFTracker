@@ -28,7 +28,7 @@ class FFTracker
         }
     }
     
-    public function Update(string $id, string $type = '')
+    public function Update(string $id, string $type = ''): string|bool
     {
         #Grab data first
         $data = $this->LodestoneGrab($id, $type);

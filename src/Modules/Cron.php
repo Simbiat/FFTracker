@@ -6,7 +6,7 @@ namespace FFTracker\Modules;
 trait Cron
 {
     #Function to process cron jobs for tracker for ease of access from outside
-    public function CronProcess()
+    public function CronProcess(): bool|string
     {
         try {
             #Update achievements first, since, most likely it will be quick due lack of those requiring an update

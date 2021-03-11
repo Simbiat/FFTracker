@@ -17,25 +17,25 @@ trait Setters
     #############
     #Setters
     #############
-    public function setUseragent(string $useragent = '')
+    public function setUseragent(string $useragent = ''): self
     {
         $this->useragent = $useragent;
         return $this;
     }
     
-    public function setMaxage(int $maxage = 90)
+    public function setMaxage(int $maxage = 90): self
     {
         $this->maxage = $maxage;
         return $this;
     }
     
-    public function setMaxlines(int $maxage = 50)
+    public function setMaxlines(int $maxage = 50): self
     {
         $this->maxlines = $maxlines;
         return $this;
     }
     
-    public function setLanguage(string $language = 'en')
+    public function setLanguage(string $language = 'en'): self
     {
         #En is used only for user convinience, in reality it uses NA (North America)
         if ($language === 'en') {
@@ -49,7 +49,7 @@ trait Setters
         return $this;
     }
     
-    public function setDbPrefix(string $dbprefix = 'ff__')
+    public function setDbPrefix(string $dbprefix = 'ff__'): self
     {
         if (empty($dbprefix)) {
             $dbprefix = 'ff__';
@@ -58,7 +58,7 @@ trait Setters
         return $this;
     }
     
-    public function setFcCrestPath(string $fccrestpath = '')
+    public function setFcCrestPath(string $fccrestpath = ''): self
     {
         if ($fccrestpath === '') {
             $fccrestpath = dirname(dirname(__FILE__)).'/Images/merged-crests';
@@ -67,7 +67,7 @@ trait Setters
         return $this;
     }
     
-    public function setPvpCrestPath(string $pvpcrestpath = '')
+    public function setPvpCrestPath(string $pvpcrestpath = ''): self
     {
         if ($pvpcrestpath === '') {
             $pvpcrestpath = dirname(dirname(__FILE__)).'/Images/merged-crests';
