@@ -1,7 +1,7 @@
 <?php
 #Functions used to manipulate crests for Free Companies and PvP Teams
 declare(strict_types=1);
-namespace FFTracker\Modules;
+namespace Simbiat\FFTModules;
 
 trait Crest
 {
@@ -21,7 +21,7 @@ trait Crest
             #Check if file exists
             if (!file_exists($imgname)) {
                 #Get crest name from database
-                $crest = strval((new \SimbiatDB\Controller)->selectValue(
+                $crest = strval((new \Simbiat\Database\Controller)->selectValue(
                     'SELECT `crest` FROM `'.$this->dbprefix.$type.'` WHERE `'.$type.'id`=:id',
                     [':id'=>basename($imgname, '.png')]
                 ));

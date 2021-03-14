@@ -1,7 +1,7 @@
 <?php
 #Functions used to get update data on tracker
 declare(strict_types=1);
-namespace FFTracker\Modules;
+namespace Simbiat\FFTModules;
 
 trait Updater
 {
@@ -111,7 +111,7 @@ trait Updater
                 $queries = array_merge($queries, $this->RemoveFromGroup($data['characterid'], 'freecompany'));
             } else {
                 #Check if not already registered in this Free Company
-                if (!(new \SimbiatDB\Controller)->check('SELECT `characterid` FROM `'.$this->dbprefix.'freecompany_character` WHERE `characterid`=:characterid AND `freecompanyid`=:freecompanyid', [':characterid'=>$data['characterid'],':freecompanyid'=>$data['freeCompany']['id']]) === true) {
+                if (!(new \Simbiat\Database\Controller)->check('SELECT `characterid` FROM `'.$this->dbprefix.'freecompany_character` WHERE `characterid`=:characterid AND `freecompanyid`=:freecompanyid', [':characterid'=>$data['characterid'],':freecompanyid'=>$data['freeCompany']['id']]) === true) {
                     #Remove character from other companies
                     $queries = array_merge($queries, $this->RemoveFromGroup($data['characterid'], 'freecompany'));
                     #Add to company (without rank) if the company is already registered. Needed to prevent grabbing data for the character again during company update. If company is not registered yet - nothing will happen
@@ -131,7 +131,7 @@ trait Updater
                 $queries = array_merge($queries, $this->RemoveFromGroup($data['characterid'], 'pvpteam'));
             } else {
                 #Check if not already registered in this PvP Team
-                if (!(new \SimbiatDB\Controller)->check('SELECT `characterid` FROM `'.$this->dbprefix.'pvpteam_character` WHERE `characterid`=:characterid AND `pvpteamid`=:pvpteamid', [':characterid'=>$data['characterid'],':pvpteamid'=>$data['pvp']['id']])) {
+                if (!(new \Simbiat\Database\Controller)->check('SELECT `characterid` FROM `'.$this->dbprefix.'pvpteam_character` WHERE `characterid`=:characterid AND `pvpteamid`=:pvpteamid', [':characterid'=>$data['characterid'],':pvpteamid'=>$data['pvp']['id']])) {
                     #Remove character from other teams
                     $queries = array_merge($queries, $this->RemoveFromGroup($data['characterid'], 'pvpteam'));
                     #Add to team (without rank) if the team is already registered. Needed to prevent grabbing data for the character again during team update. If team is not registered yet - nothing will happen
@@ -168,7 +168,7 @@ trait Updater
                     ];
                 }
             }
-            (new \SimbiatDB\Controller)->query($queries);
+            (new \Simbiat\Database\Controller)->query($queries);
             #Remove from cron, in case update was triggered from there
             $this->CronRemove('character', $data['characterid']);
             #Register Free Company update if change was detected
@@ -295,7 +295,7 @@ trait Updater
                 $regmembers = [];
             } else {
                 $inmembers = implode(',', $members);
-                $regmembers = (new \SimbiatDB\Controller)->selectColumn('SELECT `characterid` FROM `'.$this->dbprefix.'character` WHERE `characterid` IN ('.$inmembers.')');
+                $regmembers = (new \Simbiat\Database\Controller)->selectColumn('SELECT `characterid` FROM `'.$this->dbprefix.'character` WHERE `characterid` IN ('.$inmembers.')');
             }
             if (!empty($data['members'])) {
                 foreach ($data['members'] as $memberid=>$member) {
@@ -326,7 +326,7 @@ trait Updater
             #Mass remove characters, that left Free Company
             $queries = array_merge($queries, $this->MassRemoveFromGroup($data['freecompanyid'], 'freecompany', $inmembers));
             #Running the queries we've accumulated
-            (new \SimbiatDB\Controller)->query($queries);
+            (new \Simbiat\Database\Controller)->query($queries);
             #Remove cron entry (if exists)
             $this->CronRemove($data['freecompanyid'], 'freecompany');
             return true;
@@ -377,7 +377,7 @@ trait Updater
                 $regmembers = [];
             } else {
                 $inmembers = implode(',', $members);
-                $regmembers = (new \SimbiatDB\Controller)->selectColumn('SELECT `characterid` FROM `'.$this->dbprefix.'character` WHERE `characterid` IN ('.$inmembers.')');
+                $regmembers = (new \Simbiat\Database\Controller)->selectColumn('SELECT `characterid` FROM `'.$this->dbprefix.'character` WHERE `characterid` IN ('.$inmembers.')');
             }
             #Actually registering/updating members
             if (!empty($data['members'])) {
@@ -399,7 +399,7 @@ trait Updater
             #Mass remove characters, that left Free Company
             $queries = array_merge($queries, $this->MassRemoveFromGroup($data['linkshellid'], 'linkshell', $inmembers));
             #Running the queries we've accumulated
-            (new \SimbiatDB\Controller)->query($queries);
+            (new \Simbiat\Database\Controller)->query($queries);
             #Remove cron entry (if exists)
             $this->CronRemove($data['linkshellid'], 'linkshell');
             return true;
@@ -451,7 +451,7 @@ trait Updater
                 $regmembers = [];
             } else {
                 $inmembers = implode(',', $members);
-                $regmembers = (new \SimbiatDB\Controller)->selectColumn('SELECT `characterid` FROM `'.$this->dbprefix.'character` WHERE `characterid` IN ('.$inmembers.')');
+                $regmembers = (new \Simbiat\Database\Controller)->selectColumn('SELECT `characterid` FROM `'.$this->dbprefix.'character` WHERE `characterid` IN ('.$inmembers.')');
             }
             #Actually registering/updating members
             if (!empty($data['members'])) {
@@ -473,7 +473,7 @@ trait Updater
             #Mass remove characters, that left Free Company
             $queries = array_merge($queries, $this->MassRemoveFromGroup($data['linkshellid'], 'linkshell', $inmembers));
             #Running the queries we've accumulated
-            (new \SimbiatDB\Controller)->query($queries);
+            (new \Simbiat\Database\Controller)->query($queries);
             #Remove cron entry (if exists)
             $this->CronRemove($data['linkshellid'], 'crossworldlinkshell');
             return true;
@@ -529,7 +529,7 @@ trait Updater
                 $regmembers = [];
             } else {
                 $inmembers = implode(',', $members);
-                $regmembers = (new \SimbiatDB\Controller)->selectColumn('SELECT `characterid` FROM `'.$this->dbprefix.'character` WHERE `characterid` IN ('.$inmembers.')');
+                $regmembers = (new \Simbiat\Database\Controller)->selectColumn('SELECT `characterid` FROM `'.$this->dbprefix.'character` WHERE `characterid` IN ('.$inmembers.')');
             }
             #Actually registering/updating members
             foreach ($data['members'] as $memberid=>$member) {
@@ -550,7 +550,7 @@ trait Updater
             #Mass remove characters, that left Free Company
             $queries = array_merge($queries, $this->MassRemoveFromGroup($data['pvpteamid'], 'pvpteam', $inmembers));
             #Running the queries we've accumulated
-            (new \SimbiatDB\Controller)->query($queries);
+            (new \Simbiat\Database\Controller)->query($queries);
             #Remove cron entry (if exists)
             $this->CronRemove($data['pvpteamid'], 'pvpteam');
             return true;
@@ -566,7 +566,7 @@ trait Updater
     {
         try {
             #Selection is limited to 10 achievements at once in order not to backlog Cron too much
-            $achievements = (new \SimbiatDB\Controller)->selectAll(
+            $achievements = (new \Simbiat\Database\Controller)->selectAll(
                 'SELECT `'.$this->dbprefix.'achievement`.`achievementid`, `'.$this->dbprefix.'character_achievement`.`characterid` FROM `'.$this->dbprefix.'achievement` LEFT JOIN `'.$this->dbprefix.'character_achievement` ON `'.$this->dbprefix.'character_achievement`.`achievementid` = `'.$this->dbprefix.'achievement`.`achievementid` WHERE `category` IS NULL OR `howto` IS NULL OR `dbid` IS NULL OR `updated` <= DATE_ADD(UTC_TIMESTAMP(), INTERVAL -:maxage DAY) GROUP BY `'.$this->dbprefix.'achievement`.`achievementid` LIMIT 10',
                 [
                     ':maxage'=>[$this->maxage, 'int'],
@@ -575,7 +575,7 @@ trait Updater
             foreach ($achievements as $achievement) {
                 $bindings = $this->AchievementGrab($achievement['characterid'], $achievement['achievementid']);
                 if (!empty($bindings)) {
-                    (new \SimbiatDB\Controller)->query('INSERT INTO `'.$this->dbprefix.'achievement` SET `achievementid`=:achievementid, `name`=:name, `icon`=:icon, `points`=:points, `category`=:category, `subcategory`=:subcategory, `howto`=:howto, `title`=:title, `item`=:item, `itemicon`=:itemicon, `itemid`=:itemid, `dbid`=:dbid ON DUPLICATE KEY UPDATE `achievementid`=:achievementid, `name`=:name, `icon`=:icon, `points`=:points, `category`=:category, `subcategory`=:subcategory, `howto`=:howto, `title`=:title, `item`=:item, `itemicon`=:itemicon, `itemid`=:itemid, `dbid`=:dbid', $bindings);
+                    (new \Simbiat\Database\Controller)->query('INSERT INTO `'.$this->dbprefix.'achievement` SET `achievementid`=:achievementid, `name`=:name, `icon`=:icon, `points`=:points, `category`=:category, `subcategory`=:subcategory, `howto`=:howto, `title`=:title, `item`=:item, `itemicon`=:itemicon, `itemid`=:itemid, `dbid`=:dbid ON DUPLICATE KEY UPDATE `achievementid`=:achievementid, `name`=:name, `icon`=:icon, `points`=:points, `category`=:category, `subcategory`=:subcategory, `howto`=:howto, `title`=:title, `item`=:item, `itemicon`=:itemicon, `itemid`=:itemid, `dbid`=:dbid', $bindings);
                 }
             }
             return true;
@@ -646,7 +646,7 @@ trait Updater
             $queries = array_merge($queries, $this->RemoveFromGroup($id, 'linkshell', '\'\''));
             $queries = array_merge($queries, $this->RemoveFromGroup($id, 'pvpteam', '\'\''));
         }
-        $result  = (new \SimbiatDB\Controller)->query($queries);
+        $result  = (new \Simbiat\Database\Controller)->query($queries);
         if ($result === true) {
             $this->CronRemove($id, $type);
         }

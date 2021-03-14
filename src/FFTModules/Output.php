@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-namespace FFTracker\Modules;
+namespace Simbiat\FFTModules;
 
 trait Output
 {
@@ -19,7 +19,7 @@ trait Output
     
     private function GetCharacter(string $id): array
     {
-        $dbcon = (new \SimbiatDB\Controller);
+        $dbcon = (new \Simbiat\Database\Controller);
         #Get general information. Using *, but add name, because otherwise Achievement name overrides Character name and we do not want that
         $data = $dbcon->selectRow('SELECT *, `'.$this->dbprefix.'character`.`name`, `'.$this->dbprefix.'character`.`updated` FROM `'.$this->dbprefix.'character` LEFT JOIN `'.$this->dbprefix.'clan` ON `'.$this->dbprefix.'character`.`clanid` = `'.$this->dbprefix.'clan`.`clanid` LEFT JOIN `'.$this->dbprefix.'guardian` ON `'.$this->dbprefix.'character`.`guardianid` = `'.$this->dbprefix.'guardian`.`guardianid` LEFT JOIN `'.$this->dbprefix.'nameday` ON `'.$this->dbprefix.'character`.`namedayid` = `'.$this->dbprefix.'nameday`.`namedayid` LEFT JOIN `'.$this->dbprefix.'city` ON `'.$this->dbprefix.'character`.`cityid` = `'.$this->dbprefix.'city`.`cityid` LEFT JOIN `'.$this->dbprefix.'server` ON `'.$this->dbprefix.'character`.`serverid` = `'.$this->dbprefix.'server`.`serverid` LEFT JOIN `'.$this->dbprefix.'grandcompany_rank` ON `'.$this->dbprefix.'character`.`gcrankid` = `'.$this->dbprefix.'grandcompany_rank`.`gcrankid` LEFT JOIN `'.$this->dbprefix.'achievement` ON `'.$this->dbprefix.'character`.`titleid` = `'.$this->dbprefix.'achievement`.`achievementid` WHERE `'.$this->dbprefix.'character`.`characterid` = :id;', [':id'=>$id]);
         #Return empty, if nothing was found
@@ -62,7 +62,7 @@ trait Output
     
     private function GetCompany(string $id): array
     {
-        $dbcon = (new \SimbiatDB\Controller);
+        $dbcon = (new \Simbiat\Database\Controller);
         #Get general information
         $data = $dbcon->selectRow('SELECT * FROM `'.$this->dbprefix.'freecompany` LEFT JOIN `'.$this->dbprefix.'server` ON `'.$this->dbprefix.'freecompany`.`serverid`=`'.$this->dbprefix.'server`.`serverid` LEFT JOIN `'.$this->dbprefix.'grandcompany_rank` ON `'.$this->dbprefix.'freecompany`.`grandcompanyid`=`'.$this->dbprefix.'grandcompany_rank`.`gcrankid` LEFT JOIN `'.$this->dbprefix.'timeactive` ON `'.$this->dbprefix.'freecompany`.`activeid`=`'.$this->dbprefix.'timeactive`.`activeid` LEFT JOIN `'.$this->dbprefix.'estate` ON `'.$this->dbprefix.'freecompany`.`estateid`=`'.$this->dbprefix.'estate`.`estateid` LEFT JOIN `'.$this->dbprefix.'city` ON `'.$this->dbprefix.'estate`.`cityid`=`'.$this->dbprefix.'city`.`cityid` WHERE `freecompanyid`=:id', [':id'=>$id]);
         #Return empty, if nothing was found
@@ -88,7 +88,7 @@ trait Output
     
     private function GetLinkshell(string $id): array
     {
-        $dbcon = (new \SimbiatDB\Controller);
+        $dbcon = (new \Simbiat\Database\Controller);
         #Get general information
         $data = $dbcon->selectRow('SELECT * FROM `'.$this->dbprefix.'linkshell` LEFT JOIN `'.$this->dbprefix.'server` ON `'.$this->dbprefix.'linkshell`.`serverid`=`'.$this->dbprefix.'server`.`serverid` WHERE `linkshellid`=:id', [':id'=>$id]);
         #Return empty, if nothing was found
@@ -118,7 +118,7 @@ trait Output
     
     private function GetPVP(string $id): array
     {
-        $dbcon = (new \SimbiatDB\Controller);
+        $dbcon = (new \Simbiat\Database\Controller);
         #Get general information
         $data = $dbcon->selectRow('SELECT * FROM `'.$this->dbprefix.'pvpteam` LEFT JOIN `'.$this->dbprefix.'server` ON `'.$this->dbprefix.'pvpteam`.`datacenterid`=`'.$this->dbprefix.'server`.`serverid` WHERE `pvpteamid`=:id', [':id'=>$id]);
         #Return empty, if nothing was found
@@ -141,7 +141,7 @@ trait Output
     
     private function GetAchievement(string $id): array
     {
-        $dbcon = (new \SimbiatDB\Controller);
+        $dbcon = (new \Simbiat\Database\Controller);
         #Get general information
         $data = $dbcon->selectRow('SELECT *, (SELECT COUNT(*) FROM `'.$this->dbprefix.'character_achievement` WHERE `'.$this->dbprefix.'character_achievement`.`achievementid` = `'.$this->dbprefix.'achievement`.`achievementid`) as `count` FROM `'.$this->dbprefix.'achievement` WHERE `'.$this->dbprefix.'achievement`.`achievementid` = :id', [':id'=>$id]);
         #Return empty, if nothing was found
@@ -157,7 +157,7 @@ trait Output
     #Function to search for entities
     public function Search(string $what = ''): array
     {
-        $dbcon = (new \SimbiatDB\Controller);
+        $dbcon = (new \Simbiat\Database\Controller);
         $what = preg_replace('/(^[-+@<>()~*\'\s]*)|([-+@<>()~*\'\s]*$)/mi', '', $what);
         if ($what === '') {
             #Count entities
@@ -240,7 +240,7 @@ trait Output
         if ($limit < 1) {
             $limit = 1;
         }
-        $dbcon = (new \SimbiatDB\Controller);
+        $dbcon = (new \Simbiat\Database\Controller);
         $result['entities'] = $dbcon->selectAll('SELECT `'.$type.'id` AS `id`, \''.$type.'\' as `type`, `name`, '.$avatar.' AS `icon`, `updated` FROM `'.$this->dbprefix.$type.'` ORDER BY `name` ASC LIMIT '.$offset.', '.$limit);
         $result['statistics'] = $dbcon->selectRow('SELECT COUNT(`'.$type.'id`) AS `count`, MAX(`updated`) AS `updated` FROM `'.$this->dbprefix.$type.'`');
         return $result;
@@ -249,11 +249,11 @@ trait Output
     public function Statistics(string $type = 'genetics'): array
     {
         #Get Lodestone object for optimization
-        $Lodestone = (new \Lodestone\Modules\Converters);
+        $Lodestone = (new \Simbiat\LodestoneModules\Converters);
         #Get ArrayHelpers object for optimization
-        $ArrayHelpers = (new \ArrayHelpers\ArrayHelpers);
+        $ArrayHelpers = (new \Simbiat\ArrayHelpers);
         #Get connection object for slight optimization
-        $dbcon = (new \SimbiatDB\Controller);
+        $dbcon = (new \Simbiat\Database\Controller);
         $type = strtolower($type);
         if (!in_array($type, ['genetics', 'astrology', 'characters', 'freecompanies', 'cities', 'grandcompanies', 'servers', 'achievements', 'timelines', 'other'])) {
             $type = 'genetics';
@@ -522,7 +522,7 @@ trait Output
     
     public function GetRandomEntities(int $number): array
     {
-        return (new \SimbiatDB\Controller)->selectAll('
+        return (new \Simbiat\Database\Controller)->selectAll('
                 (SELECT `characterid` AS `id`, \'character\' as `type`, `name`, `avatar` AS `icon`, 0 AS `crossworld` FROM `'.$this->dbprefix.'character` WHERE `characterid` IN (SELECT `characterid` FROM `'.$this->dbprefix.'character` WHERE `deleted` IS NULL ORDER BY RAND()) LIMIT '.$number.')
                 UNION ALL
                 (SELECT `freecompanyid` AS `id`, \'freecompany\' as `type`, `name`, NULL AS `icon`, 0 AS `crossworld` FROM `'.$this->dbprefix.'freecompany` WHERE `freecompanyid` IN (SELECT `freecompanyid` FROM `'.$this->dbprefix.'freecompany` WHERE `deleted` IS NULL ORDER BY RAND()) LIMIT '.$number.')

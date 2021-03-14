@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-namespace FFTracker;
+namespace Simbiat;
 
 class FFTracker
 {
@@ -8,12 +8,12 @@ class FFTracker
     const langallowed = ['na', 'jp', 'ja', 'eu', 'fr', 'de'];
     
     #Use traits
-    use Modules\Setters;
-    use Modules\Grabber;
-    use Modules\Updater;
-    use Modules\Cron;
-    use Modules\Crest;
-    use Modules\Output;
+    use FFTModules\Setters;
+    use FFTModules\Grabber;
+    use FFTModules\Updater;
+    use FFTModules\Cron;
+    use FFTModules\Crest;
+    use FFTModules\Output;
     
     public function __construct(string $dbprefix = '', bool $nodb = false)
     {

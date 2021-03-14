@@ -1,7 +1,7 @@
 <?php
 #Functions used to get data from Lodestone
 declare(strict_types=1);
-namespace FFTracker\Modules;
+namespace Simbiat\FFTModules;
 
 trait Grabber
 {
@@ -86,7 +86,7 @@ trait Grabber
     
     private function CharacterGrab(string $id): string|array
     {
-        $Lodestone = (new \Lodestone\Api);
+        $Lodestone = (new \Simbiat\Lodestone);
         $data = $Lodestone->setLanguage($this->language)->setUseragent($this->useragent)->getCharacter($id)->getCharacterJobs($id)->getCharacterAchievements($id, false, 0, false, false, true)->getResult();
         if (empty($data['characters'][$id]['server'])) {
             if (@$data['characters'][$id] == 404) {
@@ -110,7 +110,7 @@ trait Grabber
     
     private function CompanyGrab(string $id): string|array
     {
-        $Lodestone = (new \Lodestone\Api);
+        $Lodestone = (new \Simbiat\Lodestone);
         $data = $Lodestone->setLanguage($this->language)->setUseragent($this->useragent)->getFreeCompany($id)->getFreeCompanyMembers($id, 0)->getResult();
         if (empty($data['freecompanies'][$id]['server']) || (!empty($data['freecompanies'][$id]['members']) && count($data['freecompanies'][$id]['members']) < $data['freecompanies'][$id]['members_count'])) {
             if (@$data['freecompanies'][$id] == 404) {
@@ -134,7 +134,7 @@ trait Grabber
     
     private function LinkshellGrab(string $id): string|array
     {
-        $Lodestone = (new \Lodestone\Api);
+        $Lodestone = (new \Simbiat\Lodestone);
         $data = $Lodestone->setLanguage($this->language)->setUseragent($this->useragent)->getLinkshellMembers($id, 0)->getResult();
         if (empty($data['linkshells'][$id]['server']) || (!empty($data['linkshells'][$id]['members']) && count($data['linkshells'][$id]['members']) < $data['linkshells'][$id]['memberscount'])) {
             if (@$data['linkshells'][$id]['members'] == 404) {
@@ -158,7 +158,7 @@ trait Grabber
     
     private function CrossLinkGrab(string $id): string|array
     {
-        $Lodestone = (new \Lodestone\Api);
+        $Lodestone = (new \Simbiat\Lodestone);
         $data = $Lodestone->setLanguage($this->language)->setUseragent($this->useragent)->getLinkshellMembers($id, 0)->getResult();
         if (empty($data['linkshells'][$id]['dataCenter']) || (!empty($data['linkshells'][$id]['members']) && count($data['linkshells'][$id]['members']) < $data['linkshells'][$id]['memberscount'])) {
             if (@$data['linkshells'][$id]['members'] == 404) {
@@ -182,7 +182,7 @@ trait Grabber
     
     private function PVPGrab(string $id): string|array
     {
-        $Lodestone = (new \Lodestone\Api);
+        $Lodestone = (new \Simbiat\Lodestone);
         $data = $Lodestone->getPvPTeam($id)->getResult();
         if (empty($data['pvpteams'][$id]['dataCenter']) || empty($data['pvpteams'][$id]['members'])) {
             if (@$data['pvpteams'][$id]['members'] == 404) {
@@ -207,7 +207,7 @@ trait Grabber
     private function AchievementGrab(string $character, string $achievement): array
     {
         #Grab data
-        $Lodestone = (new \Lodestone\Api)->setUseragent($this->useragent)->setLanguage($this->language);
+        $Lodestone = (new \Simbiat\Lodestone)->setUseragent($this->useragent)->setLanguage($this->language);
         $data = NULL;
         $data = $Lodestone->getCharacterAchievements($character, $achievement)->getResult();
         if (empty($data['characters'][$character]['achievements'][$achievement])) {

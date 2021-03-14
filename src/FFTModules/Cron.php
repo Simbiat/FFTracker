@@ -1,7 +1,7 @@
 <?php
 #Functions used to use "scheduler" on tracker
 declare(strict_types=1);
-namespace FFTracker\Modules;
+namespace Simbiat\FFTModules;
 
 trait Cron
 {
@@ -15,7 +15,7 @@ trait Cron
             $this->getMaxage();
             $this->getMaxlines();
             #Do actual updates with cron taking priority
-            $entities = (new \SimbiatDB\Controller)->selectAll('(
+            $entities = (new \Simbiat\Database\Controller)->selectAll('(
                 	SELECT `type`, `id`, `nextrun`, IF(`type`=\'character\', 2, 1) AS `priority` FROM `'.$this->dbprefix.'cron` ORDER BY `nextrun` ASC LIMIT :maxlines
                 )
                 UNION ALL
@@ -54,19 +54,19 @@ trait Cron
     #Add to cron
     private function CronAdd(string $id, string $type): bool
     {
-        return (new \SimbiatDB\Controller)->query('INSERT INTO `'.$this->dbprefix.'cron` (`type`, `id`) VALUES (:type, :id) ON DUPLICATE KEY UPDATE `nextrun` = UTC_TIMESTAMP();', [':type'=>$type, ':id'=>$id]);
+        return (new \Simbiat\Database\Controller)->query('INSERT INTO `'.$this->dbprefix.'cron` (`type`, `id`) VALUES (:type, :id) ON DUPLICATE KEY UPDATE `nextrun` = UTC_TIMESTAMP();', [':type'=>$type, ':id'=>$id]);
     }
     
     #Remove from cron
     private function CronRemove(string $id, string $type): void
     {
-        (new \SimbiatDB\Controller)->query('DELETE FROM `'.$this->dbprefix.'cron` WHERE `type` = :type AND `id` = :id', [':type'=>$type, ':id'=>$id]);
+        (new \Simbiat\Database\Controller)->query('DELETE FROM `'.$this->dbprefix.'cron` WHERE `type` = :type AND `id` = :id', [':type'=>$type, ':id'=>$id]);
     }
     
     #Log error and reshedule for 1 hour
     private function CronError(string $id, string $type, string $error): void
     {
-        (new \SimbiatDB\Controller)->query('UPDATE `'.$this->dbprefix.'cron` SET `error` = :error, `nextrun` = TIMESTAMPADD(SECOND, 3600, UTC_TIMESTAMP()) WHERE `type` = :type AND `id` = :id', [':type'=>$type, ':id'=>$id, ':error'=>$error]);
+        (new \Simbiat\Database\Controller)->query('UPDATE `'.$this->dbprefix.'cron` SET `error` = :error, `nextrun` = TIMESTAMPADD(SECOND, 3600, UTC_TIMESTAMP()) WHERE `type` = :type AND `id` = :id', [':type'=>$type, ':id'=>$id, ':error'=>$error]);
     }
 }
 ?>

@@ -1,7 +1,7 @@
 <?php
 #Functions used to set settings
 declare(strict_types=1);
-namespace FFTracker\Modules;
+namespace Simbiat\FFTModules;
 
 trait Setters
 {    
@@ -81,25 +81,25 @@ trait Setters
     #############
     public function getUseragent(): string
     {
-        $this->useragent = strval((new \SimbiatDB\Controller)->selectValue('SELECT `value` FROM `'.$this->dbprefix.'settings` WHERE `setting`=\'useragent\''));
+        $this->useragent = strval((new \Simbiat\Database\Controller)->selectValue('SELECT `value` FROM `'.$this->dbprefix.'settings` WHERE `setting`=\'useragent\''));
         return $this->useragent;
     }
     
     public function getMaxlines(): int
     {
-        $this->maxlines = intval((new \SimbiatDB\Controller)->selectValue('SELECT `value` FROM `'.$this->dbprefix.'settings` WHERE `setting`=\'maxlines\''));
+        $this->maxlines = intval((new \Simbiat\Database\Controller)->selectValue('SELECT `value` FROM `'.$this->dbprefix.'settings` WHERE `setting`=\'maxlines\''));
         return $this->maxlines;
     }
     
     public function getMaxage(): int
     {
-        $this->maxage = intval((new \SimbiatDB\Controller)->selectValue('SELECT `value` FROM `'.$this->dbprefix.'settings` WHERE `setting`=\'maxage\''));
+        $this->maxage = intval((new \Simbiat\Database\Controller)->selectValue('SELECT `value` FROM `'.$this->dbprefix.'settings` WHERE `setting`=\'maxage\''));
         return $this->maxage;
     }
     
     public function getLanguage(): string
     {
-        $language = (new \SimbiatDB\Controller)->selectValue('SELECT `value` FROM `'.$this->dbprefix.'settings` WHERE `setting`=\'language\'');
+        $language = (new \Simbiat\Database\Controller)->selectValue('SELECT `value` FROM `'.$this->dbprefix.'settings` WHERE `setting`=\'language\'');
         if (!in_array($language, self::langallowed)) {
             $language = 'na';
         }
@@ -115,7 +115,7 @@ trait Setters
     
     public function getFcCrestPath(): string
     {
-        $fccrestpath = strval((new \SimbiatDB\Controller)->selectValue('SELECT `value` FROM `'.$this->dbprefix.'settings` WHERE `setting`=\'freecompanycrestpath\''));
+        $fccrestpath = strval((new \Simbiat\Database\Controller)->selectValue('SELECT `value` FROM `'.$this->dbprefix.'settings` WHERE `setting`=\'freecompanycrestpath\''));
         if ($fccrestpath === '') {
             $fccrestpath = dirname(dirname(__FILE__)).'/Images/merged-crests';
         }
@@ -125,7 +125,7 @@ trait Setters
     
     public function getPvpCrestPath(): string
     {
-        $pvpcrestpath = strval((new \SimbiatDB\Controller)->selectValue('SELECT `value` FROM `'.$this->dbprefix.'settings` WHERE `setting`=\'pvpteamcrestpath\''));
+        $pvpcrestpath = strval((new \Simbiat\Database\Controller)->selectValue('SELECT `value` FROM `'.$this->dbprefix.'settings` WHERE `setting`=\'pvpteamcrestpath\''));
         if ($pvpcrestpath === '') {
             $pvpcrestpath = dirname(dirname(__FILE__)).'/Images/merged-crests';
         }
