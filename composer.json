@@ -19,7 +19,7 @@
         "simbiat/lodestone-parser": "^1.0.0+20210311",
         "simbiat/database": "^2.0.0+20210311",
         "simbiat/arrayhelpers": "^2.0.0+20210310",
-        "simbiat/http20": "^1.0.0+20210314",
+        "simbiat/http20": "^1.0.0+20210314"
     },
     "autoload": {
         "psr-4": {
