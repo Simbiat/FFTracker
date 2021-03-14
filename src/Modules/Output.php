@@ -211,6 +211,41 @@ trait Output
         return $result;
     }
     
+    #Function to get a list of entities
+    public function listEntities(string $type, int $offset = 0, int $limit = 100): array
+    {
+        #Sanitize type
+        if (!in_array($type, ['freecompanies', 'linkshells', 'crossworldlinkshells', 'crossworld_linkshells', 'characters', 'achievements', 'pvpteams'])) {
+            return [];
+        } else {
+            #Update type
+            $type = match($type) {
+                'freecompanies' => 'freecompany',
+                'linkshells', 'crossworldlinkshells', 'crossworld_linkshells' => 'linkshell',
+                'characters' => 'character',
+                'achievements' => 'achievement',
+                'pvpteams' => 'pvpteam',
+            };
+        }
+        #Set avatar value
+        $avatar = match($type) {
+            'character' => '`avatar`',
+            'achievement' => '`icon`',
+            default => 'NULL',
+        };
+        #Sanitize numbers
+        if ($offset < 0) {
+            $offset = 0;
+        }
+        if ($limit < 1) {
+            $limit = 1;
+        }
+        $dbcon = (new \SimbiatDB\Controller);
+        $result['entities'] = $dbcon->selectAll('SELECT `'.$type.'id` AS `id`, \''.$type.'\' as `type`, `name`, '.$avatar.' AS `icon`, `updated` FROM `'.$this->dbprefix.$type.'` ORDER BY `name` ASC LIMIT '.$offset.', '.$limit);
+        $result['statistics'] = $dbcon->selectRow('SELECT COUNT(`'.$type.'id`) AS `count`, MAX(`updated`) AS `updated` FROM `'.$this->dbprefix.$type.'`');
+        return $result;
+    }
+    
     public function Statistics(string $type = 'genetics'): array
     {
         #Get Lodestone object for optimization
