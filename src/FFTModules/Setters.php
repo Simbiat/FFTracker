@@ -11,8 +11,7 @@ trait Setters
     protected string $dbprefix = 'ff__';
     protected int $maxage = 90;
     protected int $maxlines = 50;
-    protected string $fccrestpath = '';
-    protected string $pvpcrestpath = '';
+    protected string $crestpath = '';
     
     #############
     #Setters
@@ -29,7 +28,7 @@ trait Setters
         return $this;
     }
     
-    public function setMaxlines(int $maxage = 50): self
+    public function setMaxlines(int $maxlines = 50): self
     {
         $this->maxlines = $maxlines;
         return $this;
@@ -58,48 +57,33 @@ trait Setters
         return $this;
     }
     
-    public function setFcCrestPath(string $fccrestpath = ''): self
-    {
-        if ($fccrestpath === '') {
-            $fccrestpath = dirname(dirname(__FILE__)).'/Images/merged-crests';
-        }
-        $this->fccrestpath = preg_replace('/(.*[^\\\\\/]{1,})([\\\\\/]{1,}$)/m', '$1', $fccrestpath).'/';
-        return $this;
-    }
-    
-    public function setPvpCrestPath(string $pvpcrestpath = ''): self
-    {
-        if ($pvpcrestpath === '') {
-            $pvpcrestpath = dirname(dirname(__FILE__)).'/Images/merged-crests';
-        }
-        $this->pvpcrestpath = preg_replace('/(.*[^\\\\\/]{1,})([\\\\\/]{1,}$)/m', '$1', $pvpcrestpath).'/';
-        return $this;
-    }
-    
     #############
     #Getters
     #############
     public function getUseragent(): string
     {
-        $this->useragent = strval((new \Simbiat\Database\Controller)->selectValue('SELECT `value` FROM `'.$this->dbprefix.'settings` WHERE `setting`=\'useragent\''));
         return $this->useragent;
     }
     
     public function getMaxlines(): int
     {
-        $this->maxlines = intval((new \Simbiat\Database\Controller)->selectValue('SELECT `value` FROM `'.$this->dbprefix.'settings` WHERE `setting`=\'maxlines\''));
+        if (empty($this->maxlines)) {
+            $this->maxlines = 50;
+        }
         return $this->maxlines;
     }
     
     public function getMaxage(): int
     {
-        $this->maxage = intval((new \Simbiat\Database\Controller)->selectValue('SELECT `value` FROM `'.$this->dbprefix.'settings` WHERE `setting`=\'maxage\''));
+        if (empty($this->maxage)) {
+            $this->maxage = 90;
+        }
         return $this->maxage;
     }
     
     public function getLanguage(): string
     {
-        $language = (new \Simbiat\Database\Controller)->selectValue('SELECT `value` FROM `'.$this->dbprefix.'settings` WHERE `setting`=\'language\'');
+        $language = $this->language;
         if (!in_array($language, self::langallowed)) {
             $language = 'na';
         }
@@ -113,24 +97,14 @@ trait Setters
         return $this->dbprefix;
     }
     
-    public function getFcCrestPath(): string
+    public function getCrestPath(): string
     {
-        $fccrestpath = strval((new \Simbiat\Database\Controller)->selectValue('SELECT `value` FROM `'.$this->dbprefix.'settings` WHERE `setting`=\'freecompanycrestpath\''));
-        if ($fccrestpath === '') {
-            $fccrestpath = dirname(dirname(__FILE__)).'/Images/merged-crests';
+        $crestpath = $this->crestpath;
+        if ($crestpath === '') {
+            $crestpath = dirname(dirname(__FILE__)).'/Images/merged-crests';
         }
-        $this->fccrestpath = preg_replace('/(.*[^\\\\\/]{1,})([\\\\\/]{1,}$)/m', '$1', $fccrestpath).'/';
-        return $this->fccrestpath;
-    }
-    
-    public function getPvpCrestPath(): string
-    {
-        $pvpcrestpath = strval((new \Simbiat\Database\Controller)->selectValue('SELECT `value` FROM `'.$this->dbprefix.'settings` WHERE `setting`=\'pvpteamcrestpath\''));
-        if ($pvpcrestpath === '') {
-            $pvpcrestpath = dirname(dirname(__FILE__)).'/Images/merged-crests';
-        }
-        $this->pvpcrestpath = preg_replace('/(.*[^\\\\\/]{1,})([\\\\\/]{1,}$)/m', '$1', $pvpcrestpath).'/';
-        return $this->pvpcrestpath;
+        $this->crestpath = preg_replace('/(.*[^\\\\\/]{1,})([\\\\\/]{1,}$)/m', '$1', $crestpath).'/';
+        return $this->crestpath;
     }
 }
 ?>

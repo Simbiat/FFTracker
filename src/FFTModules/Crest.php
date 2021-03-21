@@ -4,75 +4,15 @@ declare(strict_types=1);
 namespace Simbiat\FFTModules;
 
 trait Crest
-{
-    #Function to return either the actual crest or a placeholder if it's missing
-    public function CrestShow(string $imgname): void
-    {
-        #Check if format is correct
-        if (preg_match('/[a-zA-Z0-9]{1,40}\.png/mi', $imgname)) {
-            #Checking if we have PvP or FC based on ID format and get appropriate default path
-            if (preg_match('/[a-zA-Z0-9]{40}\.png/mi', $imgname)) {
-                $imgname = $this->pvpcrestpath.$imgname;
-                $type = 'pvpteam';
-            } else {
-                $imgname = $this->fccrestpath.$imgname;
-                $type = 'freecompany';
-            }
-            #Check if file exists
-            if (!file_exists($imgname)) {
-                #Get crest name from database
-                $crest = strval((new \Simbiat\Database\Controller)->selectValue(
-                    'SELECT `crest` FROM `'.$this->dbprefix.$type.'` WHERE `'.$type.'id`=:id',
-                    [':id'=>basename($imgname, '.png')]
-                ));
-                if (empty($crest) || !file_exists($this->pvpcrestpath.$crest.'.png')) {
-                    #Use placeholder
-                    $imgname = dirname(dirname(__FILE__)).'/Images/fftracker.png';
-                } else {
-                    $imgname = $this->pvpcrestpath.$crest.'.png';
-                }
-            }
-        } else {
-            #Perhaps we are trying to access the image using the hash
-            if (preg_match('/[a-zA-Z0-9]{64}\.png/mi', $imgname)) {
-                if (!file_exists($this->pvpcrestpath.$imgname)) {
-                    $imgname = $this->pvpcrestpath.$imgname;
-                } elseif (!file_exists($this->fccrestpath.$imgname)) {
-                    $imgname = $this->fccrestpath.$imgname;
-                } else {
-                    #Use placeholder
-                    $imgname = dirname(dirname(__FILE__)).'/Images/fftracker.png';
-                }
-            } else {
-                #Use placeholder
-                $imgname = dirname(dirname(__FILE__)).'/Images/fftracker.png';
-            }
-        }
-        #Pass the file through to browser
-        $fp = fopen($imgname, 'rb');
-        header('Cache-Control: public, max-age=15552000');
-        header('Content-Type: image/png');
-        header('Content-Length: ' . filesize($imgname));
-        fpassthru($fp);
-        #Ensure we exit
-        exit;
-    }
-    
-    public function ImageShow(string $imgname): void
+{   
+    public function ImageShow(string $imgname): string
     {
         $imgname = dirname(dirname(__FILE__)).'/Images/'.$imgname;
         if (!file_exists($imgname)) {
             #Use placeholder
             $imgname = dirname(dirname(__FILE__)).'/Images/fftracker.png';
         }
-        #Pass the file through to browser
-        $fp = fopen($imgname, 'rb');
-        header('Cache-Control: public, max-age=15552000');
-        header('Content-Type: '.mime_content_type($imgname));
-        header('Content-Length: ' . filesize($imgname));
-        fpassthru($fp);
-        #Ensure we exit
-        exit;
+        return $imgname;
     }
     
     #Function to merge 1 to 3 images making up a crest on Lodestone into 1 stored on tracker side

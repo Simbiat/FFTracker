@@ -15,17 +15,14 @@ class FFTracker
     use FFTModules\Crest;
     use FFTModules\Output;
     
-    public function __construct(string $dbprefix = '', bool $nodb = false)
+    public function __construct(string $dbprefix = '', string $language = 'na', int $maxAge = 90, int $maxLines = 50, string $userAgent = '')
     {
-        #We do not need DB for ImageShow() function, but it is requried for the rest
-        if ($nodb === false) {
-            $this->setDbPrefix($dbprefix);
-            #Get settings from Database
-            $this->getLanguage();
-            $this->getUseragent();
-            $this->getFcCrestPath();
-            $this->getPvpCrestPath();
-        }
+        $this->setDbPrefix($dbprefix);
+        $this->setLanguage($language);
+        $this->setUseragent($userAgent);
+        $this->setMaxage($maxAge);
+        $this->setMaxlines($maxLines);
+        $this->getCrestPath();
     }
     
     public function Update(string $id, string $type = ''): string|bool
