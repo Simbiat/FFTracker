@@ -4,6 +4,78 @@ namespace Simbiat\FFTModules;
 
 trait Output
 {
+    #Function to prepare data based on URI
+    public function uriParse(array $uri): array
+    {
+        #Check if URI is empty
+        if (empty($uri)) {
+            (new \Simbiat\http20\Headers)->redirect('https://'.$_SERVER['HTTP_HOST'].($_SERVER['HTTP_PORT'] !== 443 ? ':'.$_SERVER['HTTP_PORT'] : '').'/fftracker/search', true, true, false);
+        }
+        #Prepare array
+        $outputArray = [
+            'service_name' => 'fftracker',
+            'h1' => 'Final Fantasy XIV Tracker',
+            'title' => 'Final Fantasy XIV Tracker',
+            'ogdesc' => 'Tracker for Final Fantasy XIV entities and respective statistics',
+            'keywords' => 'Final Fantasy XIV, Realm Reborn, Heavensward, Free Company, Lodestone, Tracker, Character progression, Name history, Company members, Level history, Linkshell, FF14, FFXIV, Final Fantasy 14, A Realm Reborn, Stormblood, Endwalker, MMO, MMORPG',
+        ];
+        #Start breadcrumbs
+        $breadarray = [
+            ['href'=>'/', 'name'=>'Home page'],
+        ];
+        switch (strtolower($uri[0])) {
+            #Process search page
+            case 'search':
+                $outputArray['subservice'] = 'search';
+                #Set search value
+                if (!isset($uri[1])) {
+                    $uri[1] = '';
+                }
+                $decodedSearch = rawurldecode($uri[1]);
+                #Continue breadcrumb
+                $breadarray[] = ['href'=>'/fftracker/search', 'name'=>'Search'];
+                if (!empty($uri[1])) {
+                    $breadarray[] = ['href'=>'/fftracker/search'.$uri[1], 'name'=>'Search for '.$decodedSearch];
+                }
+                #Set specific values
+                $outputArray['searchvalue'] = $decodedSearch;
+                $outputArray['searchresult'] = $this->Search($decodedSearch);
+                break;
+            #Process statistics
+            case 'statistics':
+                #Check if type is set
+                if (empty($uri[1])) {
+                    (new \Simbiat\http20\Headers)->redirect('https://'.$_SERVER['HTTP_HOST'].($_SERVER['HTTP_PORT'] !== 443 ? ':'.$_SERVER['HTTP_PORT'] : '').'/fftracker/statistics/genetics', true, true, false);
+                } else {
+                    $uri[1] = strtolower($uri[1]);
+                    if (in_array($uri[1], ['genetics', 'astrology', 'characters', 'freecompanies', 'cities', 'grandcompanies', 'servers', 'achievements', 'timelines', 'other'])) {
+                        $outputArray['subservice'] = 'statistics';
+                        #Set statistics type
+                        $outputArray['ff_stat_type'] = $uri[1];
+                        #Continue breadcrumb
+                        $breadarray[] = ['href'=>'/fftracker/statistics/'.$uri[1], 'name'=>ucfirst(preg_replace('/s$/i', 's\'', preg_replace('/companies/i', ' Companies', $uri[1])).' statistics')];
+                        #Get the data
+                        $outputArray[$uri[0]] = (new \Simbiat\FFTracker)->Statistics($uri[1]);
+                        #Adjust meta
+                        $outputArray['h1'] .= ': Statistics';
+                        $outputArray['title'] .= ': Statistics';
+                        $outputArray['keywords'] .= ', Statistics';
+                    } else {
+                        $outputArray['http_error'] = 404;
+                    }
+                }
+                break;
+            default:
+                $outputArray['http_error'] = 404;
+                break;
+        }
+        #Add breadcrumbs
+        $breadarray = (new \Simbiat\http20\HTML)->breadcrumbs(items: $breadarray, links: true, headers: true);
+        $outputArray['breadcrumbs']['fftracker'] = $breadarray['breadcrumbs'];
+        $outputArray['breadcrumbs']['links'] = $breadarray['links'];
+        return $outputArray;
+    }
+    
     #Generalized function to get entity data
     public function TrackerGrab(string $id, string $type): array
     {
