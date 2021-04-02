@@ -9,7 +9,7 @@ trait Output
     {
         #Check if URI is empty
         if (empty($uri)) {
-            (new \Simbiat\http20\Headers)->redirect('https://'.$_SERVER['HTTP_HOST'].($_SERVER['HTTP_PORT'] !== 443 ? ':'.$_SERVER['HTTP_PORT'] : '').'/fftracker/search', true, true, false);
+            (new \Simbiat\http20\Headers)->redirect('https://'.$_SERVER['HTTP_HOST'].($_SERVER['SERVER_PORT'] !== 443 ? ':'.$_SERVER['SERVER_PORT'] : '').'/fftracker/search', true, true, false);
         }
         #Prepare array
         $outputArray = [
@@ -23,7 +23,8 @@ trait Output
         $breadarray = [
             ['href'=>'/', 'name'=>'Home page'],
         ];
-        switch (strtolower($uri[0])) {
+        $uri[0] = strtolower($uri[0]);
+        switch ($uri[0]) {
             #Process search page
             case 'search':
                 $outputArray['subservice'] = 'search';
@@ -45,7 +46,7 @@ trait Output
             case 'statistics':
                 #Check if type is set
                 if (empty($uri[1])) {
-                    (new \Simbiat\http20\Headers)->redirect('https://'.$_SERVER['HTTP_HOST'].($_SERVER['HTTP_PORT'] !== 443 ? ':'.$_SERVER['HTTP_PORT'] : '').'/fftracker/statistics/genetics', true, true, false);
+                    (new \Simbiat\http20\Headers)->redirect('https://'.$_SERVER['HTTP_HOST'].($_SERVER['SERVER_PORT'] !== 443 ? ':'.$_SERVER['SERVER_PORT'] : '').'/fftracker/statistics/genetics', true, true, false);
                 } else {
                     $uri[1] = strtolower($uri[1]);
                     if (in_array($uri[1], ['genetics', 'astrology', 'characters', 'freecompanies', 'cities', 'grandcompanies', 'servers', 'achievements', 'timelines', 'other'])) {
@@ -55,7 +56,7 @@ trait Output
                         #Continue breadcrumb
                         $breadarray[] = ['href'=>'/fftracker/statistics/'.$uri[1], 'name'=>ucfirst(preg_replace('/s$/i', 's\'', preg_replace('/companies/i', ' Companies', $uri[1])).' statistics')];
                         #Get the data
-                        $outputArray[$uri[0]] = (new \Simbiat\FFTracker)->Statistics($uri[1]);
+                        $outputArray[$uri[0]] = $this->Statistics($uri[1]);
                         #Adjust meta
                         $outputArray['h1'] .= ': Statistics';
                         $outputArray['title'] .= ': Statistics';
@@ -63,6 +64,54 @@ trait Output
                     } else {
                         $outputArray['http_error'] = 404;
                     }
+                }
+                break;
+            #Process lists
+            case 'crossworldlinkshells':
+            case 'crossworld_linkshells':
+                #Redirect to linkshells list, since we do not differentiate between them that much
+                (new \Simbiat\http20\Headers)->redirect('https://'.$_SERVER['HTTP_HOST'].($_SERVER['SERVER_PORT'] !== 443 ? ':'.$_SERVER['SERVER_PORT'] : '').'/fftracker/linkshells/'.(empty($uri[1]) ? '' : $uri[1]), true, true, false);
+                break;
+            case 'freecompanies':
+            case 'linkshells':
+            case 'characters':
+            case 'achievements':
+            case 'pvpteams':
+                #Check if page was provided and is numeric
+                if (empty($uri[1]) || !is_numeric($uri[1]) || intval($uri[1]) < 1) {
+                    (new \Simbiat\http20\Headers)->redirect('https://'.$_SERVER['HTTP_HOST'].($_SERVER['SERVER_PORT'] !== 443 ? ':'.$_SERVER['SERVER_PORT'] : '').'/fftracker/'.$uri[0].'/1', true, true, false);
+                }
+                #Ensure that use INT
+                $uri[1] = intval($uri[1]);
+                #Get data
+                $outputArray['searchresult'] = $this->listEntities($uri[0], ($uri[1]-1)*100, 100);
+                #Check that we requested page is not more than what was requested
+                $lastpage = intval(ceil($outputArray['searchresult']['statistics']['count']/100));
+                if ($uri[1] > $lastpage) {
+                    #Bad page
+                    unset($outputArray['searchresult']);
+                    $outputArray['http_error'] = 404;
+                } else {
+                    #Try to get out earlier based on date of last update of the list. Unlikely, that will help, but still.
+                    (new \Simbiat\http20\Headers)->lastModified($outputArray['searchresult']['statistics']['updated'], true);
+                    $outputArray['subservice'] = 'list';
+                    #Adjust list type to human-readable value
+                    $tempname = match($uri[0]) {
+                        'freecompanies' => 'Free Companies',
+                        'pvpteams' => 'PvP Teams',
+                        default => ucfirst($uri[0]),
+                    };
+                    #Continue breadcrumb
+                    $breadarray[] = ['href'=>'/fftracker/'.$uri[0].'/'.$uri[1], 'name'=>$tempname.', page '.$uri[1]];
+                    #Update meta
+                    $outputArray['h1'] .= ': '.$tempname.', page '.$uri[1];
+                    $outputArray['title'] .= ': '.$tempname.', page '.$uri[1];
+                    #Prepare pagination
+                    $htmlPagin = (new \Simbiat\http20\HTML);
+                    $pagination = $htmlPagin->pagination($uri[1], $lastpage, links: true, headers: true);
+                    $outputArray['pagination_top'] = $pagination['pagination'];
+                    $outputArray['pagination']['links'] = $pagination['links'];
+                    $outputArray['pagination_bottom'] = $htmlPagin->pagination($uri[1], $lastpage);
                 }
                 break;
             default:
@@ -303,6 +352,7 @@ trait Output
         $avatar = match($type) {
             'character' => '`avatar`',
             'achievement' => '`icon`',
+            'freecompany', 'pvpteam' => 'crest',
             default => 'NULL',
         };
         #Sanitize numbers
