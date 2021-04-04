@@ -345,7 +345,7 @@ trait Output
             return [];
         }
         #Get random characters with this achievement
-        $data['characters'] = $dbcon->selectAll('SELECT * FROM (SELECT `'.$this->dbprefix.'character`.`characterid`, `'.$this->dbprefix.'character`.`name`, `'.$this->dbprefix.'character`.`avatar` FROM `'.$this->dbprefix.'character_achievement` LEFT JOIN `'.$this->dbprefix.'character` ON `'.$this->dbprefix.'character`.`characterid` = `'.$this->dbprefix.'character_achievement`.`characterid` WHERE `'.$this->dbprefix.'character_achievement`.`achievementid` = :id ORDER BY rand() LIMIT '.$this->maxlines.') t ORDER BY `name`', [':id'=>$id]);
+        $data['characters'] = $dbcon->selectAll('SELECT * FROM (SELECT \'character\' AS `type`, `'.$this->dbprefix.'character`.`characterid` AS `id`, `'.$this->dbprefix.'character`.`name`, `'.$this->dbprefix.'character`.`avatar` AS `icon` FROM `'.$this->dbprefix.'character_achievement` LEFT JOIN `'.$this->dbprefix.'character` ON `'.$this->dbprefix.'character`.`characterid` = `'.$this->dbprefix.'character_achievement`.`characterid` WHERE `'.$this->dbprefix.'character_achievement`.`achievementid` = :id ORDER BY rand() LIMIT '.$this->maxlines.') t ORDER BY `name`', [':id'=>$id]);
         unset($dbcon);
         return $data;   
     }
