@@ -35,7 +35,7 @@ trait Output
                 #Continue breadcrumb
                 $breadarray[] = ['href'=>'/fftracker/search', 'name'=>'Search'];
                 if (!empty($uri[1])) {
-                    $breadarray[] = ['href'=>'/fftracker/search'.$uri[1], 'name'=>'Search for '.$decodedSearch];
+                    $breadarray[] = ['href'=>'/fftracker/search/'.$uri[1], 'name'=>'Search for '.$decodedSearch];
                 } else {
                     #Cache due to random entities
                     $outputArray['cache_age'] = 259200;
