@@ -9,7 +9,7 @@ trait Output
     {
         #Check if URI is empty
         if (empty($uri)) {
-            (new \Simbiat\http20\Headers)->redirect('https://'.$_SERVER['HTTP_HOST'].($_SERVER['SERVER_PORT'] !== 443 ? ':'.$_SERVER['SERVER_PORT'] : '').'/fftracker/search', true, true, false);
+            (new \Simbiat\http20\Headers)->redirect('https://'.$_SERVER['HTTP_HOST'].($_SERVER['SERVER_PORT'] != 443 ? ':'.$_SERVER['SERVER_PORT'] : '').'/fftracker/search', true, true, false);
         }
         #Prepare array
         $outputArray = [
@@ -48,7 +48,7 @@ trait Output
             case 'statistics':
                 #Check if type is set
                 if (empty($uri[1])) {
-                    (new \Simbiat\http20\Headers)->redirect('https://'.$_SERVER['HTTP_HOST'].($_SERVER['SERVER_PORT'] !== 443 ? ':'.$_SERVER['SERVER_PORT'] : '').'/fftracker/statistics/genetics', true, true, false);
+                    (new \Simbiat\http20\Headers)->redirect('https://'.$_SERVER['HTTP_HOST'].($_SERVER['SERVER_PORT'] != 443 ? ':'.$_SERVER['SERVER_PORT'] : '').'/fftracker/statistics/genetics', true, true, false);
                 } else {
                     $uri[1] = strtolower($uri[1]);
                     if (in_array($uri[1], ['genetics', 'astrology', 'characters', 'freecompanies', 'cities', 'grandcompanies', 'servers', 'achievements', 'timelines', 'other'])) {
@@ -73,7 +73,7 @@ trait Output
             case 'crossworldlinkshells':
             case 'crossworld_linkshells':
                 #Redirect to linkshells list, since we do not differentiate between them that much
-                (new \Simbiat\http20\Headers)->redirect('https://'.$_SERVER['HTTP_HOST'].($_SERVER['SERVER_PORT'] !== 443 ? ':'.$_SERVER['SERVER_PORT'] : '').'/fftracker/linkshells/'.(empty($uri[1]) ? '' : $uri[1]), true, true, false);
+                (new \Simbiat\http20\Headers)->redirect('https://'.$_SERVER['HTTP_HOST'].($_SERVER['SERVER_PORT'] != 443 ? ':'.$_SERVER['SERVER_PORT'] : '').'/fftracker/linkshells/'.(empty($uri[1]) ? '' : $uri[1]), true, true, false);
                 break;
             case 'freecompanies':
             case 'linkshells':
@@ -82,7 +82,7 @@ trait Output
             case 'pvpteams':
                 #Check if page was provided and is numeric
                 if (empty($uri[1]) || !is_numeric($uri[1]) || intval($uri[1]) < 1) {
-                    (new \Simbiat\http20\Headers)->redirect('https://'.$_SERVER['HTTP_HOST'].($_SERVER['SERVER_PORT'] !== 443 ? ':'.$_SERVER['SERVER_PORT'] : '').'/fftracker/'.$uri[0].'/1', true, true, false);
+                    (new \Simbiat\http20\Headers)->redirect('https://'.$_SERVER['HTTP_HOST'].($_SERVER['SERVER_PORT'] != 443 ? ':'.$_SERVER['SERVER_PORT'] : '').'/fftracker/'.$uri[0].'/1', true, true, false);
                 }
                 #Ensure that use INT
                 $uri[1] = intval($uri[1]);
@@ -121,7 +121,7 @@ trait Output
             case 'crossworldlinkshell':
             case 'crossworld_linkshell':
                 #Redirect to linkshell page, since we do not differentiate between them that much
-                (new \Simbiat\http20\Headers)->redirect('https://'.$_SERVER['HTTP_HOST'].($_SERVER['SERVER_PORT'] !== 443 ? ':'.$_SERVER['SERVER_PORT'] : '').'/fftracker/linkshell/'.(empty($uri[1]) ? '' : $uri[1]), true, true, false);
+                (new \Simbiat\http20\Headers)->redirect('https://'.$_SERVER['HTTP_HOST'].($_SERVER['SERVER_PORT'] != 443 ? ':'.$_SERVER['SERVER_PORT'] : '').'/fftracker/linkshell/'.(empty($uri[1]) ? '' : $uri[1]), true, true, false);
                 break;
             case 'achievement':
             case 'character':
