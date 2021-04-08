@@ -36,7 +36,11 @@ class FFTracker
                 return $this->DeleteEntity($id, $data['entitytype']);
             } else {
                 #Data was retrieved, update entity
-                return $this->EntityUpdate($data);
+                if ($this->EntityUpdate($data) === true) {
+                    return $data['entitytype'];
+                } else {
+                    return false;
+                }
             }
         } else {
             #This means, that an error was returned

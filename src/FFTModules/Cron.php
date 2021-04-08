@@ -40,7 +40,7 @@ trait Cron
                 foreach ($entities as $entity) {
                     #Updating entities. IDs are converted to string explicitly, since character and free company IDs should be returned as integers by default, but we need to use strings
                     $result = $this->Update(strval($entity['id']), $entity['type']);
-                    if ($result !== true) {
+                    if (!in_array($result, ['character', 'freecompany', 'linkshell', 'crossworldlinkshell', 'pvpteam'])) {
                         return $result;
                     }
                 }
