@@ -133,7 +133,7 @@ trait Output
                     $outputArray['http_error'] = 404;
                 } else {
                     #Grab data
-                    $outputArray[$uri[0]] = $this->TrackerGrab($uri[1], $uri[0]);
+                    $outputArray[$uri[0]] = $this->TrackerGrab($uri[0], $uri[1]);
                     #Check if ID was found
                     if (empty($outputArray[$uri[0]])) {
                         $outputArray['http_error'] = 404;
@@ -201,7 +201,7 @@ trait Output
     }
     
     #Generalized function to get entity data
-    public function TrackerGrab(string $id, string $type): array
+    public function TrackerGrab(string $type, string $id): array
     {
         return match($type) {
             'character' => $this->GetCharacter($id),
