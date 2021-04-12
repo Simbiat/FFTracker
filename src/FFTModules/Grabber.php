@@ -6,7 +6,7 @@ namespace Simbiat\FFTModules;
 trait Grabber
 {
     #Attempt to grab data
-    private function LodestoneGrab(string $id, string $type = ''): string|array
+    private function LodestoneGrab(string $id, string $type = '', string $charid = ''): string|array
     {
         switch ($type) {
             case 'character':
@@ -49,7 +49,20 @@ trait Grabber
                     $data = $this->LodestoneGrab($id, '');
                 }
                 break;
-            default:
+            case 'achievement':
+                #Check if valid format
+                if (is_numeric($id) === true) {
+                    #Check if character is provided
+                    if (empty($charid)) {
+                        $data = 'No character ID provided for achievement';
+                    } else {
+                        $data = $this->AchievementGrab($charid, $id);
+                    }
+                } else {
+                    $data = 'Wrong ID for achievement';
+                }
+                break;
+            case '':
                 if (is_numeric($id)) {
                     #Try getting character
                     $data = $this->CharacterGrab($id);
@@ -80,6 +93,8 @@ trait Grabber
                     }
                 }
                 break;
+            default:
+                $data = 'Unsuported type '.$type;
         }
         return $data;
     }
@@ -209,7 +224,7 @@ trait Grabber
         #Grab data
         $Lodestone = (new \Simbiat\Lodestone)->setUseragent($this->useragent)->setLanguage($this->language);
         $data = NULL;
-        $data = $Lodestone->getCharacterAchievements($character, $achievement)->getResult();
+        $data = $Lodestone->getCharacterAchievements($character, intval($achievement))->getResult();
         if (empty($data['characters'][$character]['achievements'][$achievement])) {
             return [];
         }
@@ -264,6 +279,7 @@ trait Grabber
         } else {
             $bindings[':dbid'] = $data['dbid'];
         }
+        $bindings['entitytype'] = 'achievement';
         return $bindings;
     }
 }

@@ -250,7 +250,7 @@ trait Output
         unset($data['clanid'], $data['namedayid'], $data['achievementid'], $data['category'], $data['subcategory'], $data['howto'], $data['points'], $data['icon'], $data['item'], $data['itemicon'], $data['itemid'], $data['serverid']);
         #In case the entry is old enough (at least 1 day old) and register it for update
         if (empty($data['deleted']) && (time() - strtotime($data['updated'])) >= 86400) {
-            $this->CronAdd($id, 'character');
+            (new \Simbiat\Cron)->add('ffentityupdate', ['character', $id], priority: 1, message: 'Updating character with ID '.$id);
         }
         unset($dbcon);
         return $data;
@@ -276,7 +276,7 @@ trait Output
         unset($data['grandcompanyid'], $data['estateid'], $data['gcrankid'], $data['gc_rank'], $data['gc_icon'], $data['activeid'], $data['cityid'], $data['left'], $data['top'], $data['cityicon']);
         #In case the entry is old enough (at least 1 day old) and register it for update
         if (empty($data['deleted']) && (time() - strtotime($data['updated'])) >= 86400) {
-            $this->CronAdd($id, 'freecompany');
+            (new \Simbiat\Cron)->add('ffentityupdate', ['freecompany', $id], priority: 1, message: 'Updating free company with ID '.$id);
         }
         unset($dbcon);
         return $data;
@@ -303,9 +303,9 @@ trait Output
         #In case the entry is old enough (at least 1 day old) and register it for update
         if (empty($data['deleted']) && (time() - strtotime($data['updated'])) >= 86400) {
             if ($data['crossworld'] == '0') {
-                $this->CronAdd($id, 'linkshell');
+                (new \Simbiat\Cron)->add('ffentityupdate', ['linkshell', $id], priority: 1, message: 'Updating linkshell with ID '.$id);
             } else {
-                $this->CronAdd($id, 'crossworldlinkshell');
+                (new \Simbiat\Cron)->add('ffentityupdate', ['crossworldlinkshell', $id], priority: 1, message: 'Updating crossworldlinkshell with ID '.$id);
             }
         }
         unset($dbcon);
@@ -329,7 +329,7 @@ trait Output
         unset($data['datacenterid'], $data['serverid'], $data['server']);
         #In case the entry is old enough (at least 1 day old) and register it for update
         if (empty($data['deleted']) && (time() - strtotime($data['updated'])) >= 86400) {
-            $this->CronAdd($id, 'pvpteam');
+            (new \Simbiat\Cron)->add('ffentityupdate', ['pvpteam', $id], priority: 1, message: 'Updating PvP team with ID '.$id);
         }
         unset($dbcon);
         return $data;   
@@ -344,8 +344,12 @@ trait Output
         if (empty($data) || !is_array($data)) {
             return [];
         }
-        #Get random characters with this achievement
-        $data['characters'] = $dbcon->selectAll('SELECT * FROM (SELECT \'character\' AS `type`, `'.$this->dbprefix.'character`.`characterid` AS `id`, `'.$this->dbprefix.'character`.`name`, `'.$this->dbprefix.'character`.`avatar` AS `icon` FROM `'.$this->dbprefix.'character_achievement` LEFT JOIN `'.$this->dbprefix.'character` ON `'.$this->dbprefix.'character`.`characterid` = `'.$this->dbprefix.'character_achievement`.`characterid` WHERE `'.$this->dbprefix.'character_achievement`.`achievementid` = :id ORDER BY rand() LIMIT '.$this->maxlines.') t ORDER BY `name`', [':id'=>$id]);
+        #Get last characters with this achievement
+        $data['characters'] = $dbcon->selectAll('SELECT * FROM (SELECT \'character\' AS `type`, `'.$this->dbprefix.'character`.`characterid` AS `id`, `'.$this->dbprefix.'character`.`name`, `'.$this->dbprefix.'character`.`avatar` AS `icon` FROM `'.$this->dbprefix.'character_achievement` LEFT JOIN `'.$this->dbprefix.'character` ON `'.$this->dbprefix.'character`.`characterid` = `'.$this->dbprefix.'character_achievement`.`characterid` WHERE `'.$this->dbprefix.'character_achievement`.`achievementid` = :id ORDER BY `'.$this->dbprefix.'character_achievement`.`time` DESC LIMIT '.$this->maxlines.') t ORDER BY `name`', [':id'=>$id]);
+        #Register for an update if old enough or category or howto or dbid are empty
+        if (empty($data['category']) || empty($data['subcategory']) || empty($data['howto']) || empty($data['dbid']) || (time() - strtotime($data['updated'])) >= 31536000) {
+            (new \Simbiat\Cron)->add('ffentityupdate', ['achievement', $id, array_column($data['characters'], 'id')[0]], priority: 2, message: 'Updating achievement with ID '.$id);
+        }
         unset($dbcon);
         return $data;   
     }

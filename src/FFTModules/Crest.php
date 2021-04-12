@@ -7,10 +7,10 @@ trait Crest
 {   
     public function ImageShow(string $imgname): string
     {
-        $imgname = dirname(dirname(__FILE__)).'/Images/'.$imgname;
+        $imgname = dirname(__DIR__).'/Images/'.$imgname;
         if (!file_exists($imgname)) {
             #Use placeholder
-            $imgname = dirname(dirname(__FILE__)).'/Images/fftracker.png';
+            $imgname = dirname(__DIR__).'/Images/fftracker.png';
         }
         return $imgname;
     }

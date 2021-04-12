@@ -6,7 +6,7 @@ namespace Simbiat\FFTModules;
 trait Updater
 {
     #Update data
-    private function EntityUpdate(array $data): bool
+    private function EntityUpdate(array $data): string|bool
     {
         return match($data['entitytype']) {
             'character' => $this->CharacterUpdate($data),
@@ -14,11 +14,12 @@ trait Updater
             'linkshell' => $this->LinkshellUpdate($data),
             'crossworldlinkshell' => $this->CrossLinkUpdate($data),
             'pvpteam' => $this->PVPUpdate($data),
+            'achievement' => $this->AchievementUpdate($data),
             default => false,
         };
     }
     
-    private function CharacterUpdate(array $data): bool
+    private function CharacterUpdate(array $data): string|bool
     {
         try {
             #Flags to schedule Free Company or PvPTeam updates
@@ -116,7 +117,7 @@ trait Updater
                     $queries = array_merge($queries, $this->RemoveFromGroup($data['characterid'], 'freecompany'));
                     #Add to company (without rank) if the company is already registered. Needed to prevent grabbing data for the character again during company update. If company is not registered yet - nothing will happen
                     $query[] = [
-                        'INSERT INTO `'.$this->dbprefix.'freecompany_character`(`characterid`, `freecompanyid`) SELECT (SELECT `characterid` FROM `'.$this->dbprefix.'character` WHERE `characterid`=:characterid) AS `characterid`, (SELECT `freecompanyid` FROM `ff__freecompany` WHERE `freecompanyid`=:freecompanyid) AS `freecompanyid` FROM DUAL HAVING `freecompanyid` IS NOT NULL;',
+                        'INSERT INTO `'.$this->dbprefix.'freecompany_character`(`characterid`, `freecompanyid`) SELECT (SELECT `characterid` FROM `'.$this->dbprefix.'character` WHERE `characterid`=:characterid) AS `characterid`, (SELECT `freecompanyid` FROM `'.$this->dbprefix.'freecompany` WHERE `freecompanyid`=:freecompanyid) AS `freecompanyid` FROM DUAL HAVING `freecompanyid` IS NOT NULL;',
                         [
                             ':characterid'=>$data['characterid'],
                             ':freecompanyid'=>$data['freeCompany']['id'],
@@ -136,7 +137,7 @@ trait Updater
                     $queries = array_merge($queries, $this->RemoveFromGroup($data['characterid'], 'pvpteam'));
                     #Add to team (without rank) if the team is already registered. Needed to prevent grabbing data for the character again during team update. If team is not registered yet - nothing will happen
                     $query[] = [
-                        'INSERT INTO `'.$this->dbprefix.'pvpteam_character`(`characterid`, `pvpteamid`) SELECT (SELECT `characterid` FROM `'.$this->dbprefix.'character` WHERE `characterid`=:characterid) AS `characterid`, (SELECT `pvpteamid` FROM `ff__pvpteam` WHERE `pvpteamid`=:pvpteamid) AS `pvpteamid` FROM DUAL HAVING `pvpteamid` IS NOT NULL;',
+                        'INSERT INTO `'.$this->dbprefix.'pvpteam_character`(`characterid`, `pvpteamid`) SELECT (SELECT `characterid` FROM `'.$this->dbprefix.'character` WHERE `characterid`=:characterid) AS `characterid`, (SELECT `pvpteamid` FROM `'.$this->dbprefix.'pvpteam` WHERE `pvpteamid`=:pvpteamid) AS `pvpteamid` FROM DUAL HAVING `pvpteamid` IS NOT NULL;',
                         [
                             ':characterid'=>$data['characterid'],
                             ':pvpteamid'=>$data['pvp']['id'],
@@ -169,29 +170,27 @@ trait Updater
                 }
             }
             (new \Simbiat\Database\Controller)->query($queries);
-            #Remove from cron, in case update was triggered from there
-            $this->CronRemove('character', $data['characterid']);
             #Register Free Company update if change was detected
+            if ($fccron === true || $pvpcron === true) {
+                #Cache CRON object
+                $cron = (new \Simbiat\Cron);
+            }
             if ($fccron) {
                 #If we have triggered this from within Free Company update, it will simply update the next run time which should not affect anything
-                $this->CronAdd($data['freeCompany']['id'], 'freecompany');
+                $cron->add('ffentityupdate', ['freecompany', $data['freeCompany']['id']], message: 'Updating free company with ID '.$data['freeCompany']['id']);
             }
             #Register PvP Team update if change was detected
             if ($pvpcron) {
                 #If we have triggered this from within PvP Team update, it will simply update the next run time which should not affect anything
-                $this->CronAdd($data['pvp']['id'], 'pvpteam');
+                $cron->add('ffentityupdate', ['pvpteam', $data['pvp']['id']], message: 'Updating PvP team with ID '.$data['pvp']['id']);
             }
-            #Remove cron entry (if exists)
-            $this->CronRemove($data['characterid'], 'character');
             return true;
         } catch(\Exception $e) {
-            #Update cron entry (if exists) with the error
-            $this->CronError($data['characterid'], 'character', $e->getTraceAsString());
-            return false;
+            return $e->getMessage()."\r\n".$e->getTraceAsString();
         }
     }
     
-    private function CompanyUpdate(array $data): bool
+    private function CompanyUpdate(array $data): string|bool
     {
         try {
             #Attempt to get crest
@@ -280,7 +279,7 @@ trait Updater
             #Adding ranking at this point since it needs members count, that we just got
             if (!empty($data['weekly_rank']) && !empty($data['monthly_rank'])) {
                 $queries[] = [
-                    'INSERT INTO `'.$this->dbprefix.'freecompany_ranking` (`freecompanyid`, `date`, `weekly`, `monthly`, `members`) SELECT * FROM (SELECT :freecompanyid AS `freecompanyid`, UTC_DATE() AS `date`, :weekly AS `weekly`, :monthly AS `monthly`, :members AS `members` FROM DUAL WHERE :freecompanyid NOT IN (SELECT `freecompanyid` FROM (SELECT * FROM `ff__freecompany_ranking` WHERE `freecompanyid`=:freecompanyid ORDER BY `date` DESC LIMIT 1) `lastrecord` WHERE `weekly`=:weekly AND `monthly`=:monthly) LIMIT 1) `actualinsert` ON DUPLICATE KEY UPDATE `weekly`=:weekly, `monthly`=:monthly, `members`=:members;',
+                    'INSERT INTO `'.$this->dbprefix.'freecompany_ranking` (`freecompanyid`, `date`, `weekly`, `monthly`, `members`) SELECT * FROM (SELECT :freecompanyid AS `freecompanyid`, UTC_DATE() AS `date`, :weekly AS `weekly`, :monthly AS `monthly`, :members AS `members` FROM DUAL WHERE :freecompanyid NOT IN (SELECT `freecompanyid` FROM (SELECT * FROM `'.$this->dbprefix.'freecompany_ranking` WHERE `freecompanyid`=:freecompanyid ORDER BY `date` DESC LIMIT 1) `lastrecord` WHERE `weekly`=:weekly AND `monthly`=:monthly) LIMIT 1) `actualinsert` ON DUPLICATE KEY UPDATE `weekly`=:weekly, `monthly`=:monthly, `members`=:members;',
                     [
                         ':freecompanyid'=>$data['freecompanyid'],
                         ':weekly'=>$data['weekly_rank'],
@@ -327,17 +326,13 @@ trait Updater
             $queries = array_merge($queries, $this->MassRemoveFromGroup($data['freecompanyid'], 'freecompany', $inmembers));
             #Running the queries we've accumulated
             (new \Simbiat\Database\Controller)->query($queries);
-            #Remove cron entry (if exists)
-            $this->CronRemove($data['freecompanyid'], 'freecompany');
             return true;
         } catch(\Exception $e) {
-            #Update cron entry (if exists) with the error
-            $this->CronError($data['freecompanyid'], 'freecompany', $e->getTraceAsString());
-            return false;
+            return $e->getMessage()."\r\n".$e->getTraceAsString();
         }
     }
     
-    private function LinkshellUpdate(array $data): bool
+    private function LinkshellUpdate(array $data): string|bool
     {
         try {
             #Main query to insert or update a Linkshell
@@ -400,17 +395,13 @@ trait Updater
             $queries = array_merge($queries, $this->MassRemoveFromGroup($data['linkshellid'], 'linkshell', $inmembers));
             #Running the queries we've accumulated
             (new \Simbiat\Database\Controller)->query($queries);
-            #Remove cron entry (if exists)
-            $this->CronRemove($data['linkshellid'], 'linkshell');
             return true;
         } catch(Exception $e) {
-            #Update cron entry (if exists) with the error
-            $this->CronError($data['linkshellid'], 'linkshell', $e->getTraceAsString());
-            return false;
+            return $e->getMessage()."\r\n".$e->getTraceAsString();
         }
     }
     
-    private function CrossLinkUpdate(array $data): bool
+    private function CrossLinkUpdate(array $data): string|bool
     {
         try {
             #Main query to insert or update a Linkshell
@@ -474,17 +465,13 @@ trait Updater
             $queries = array_merge($queries, $this->MassRemoveFromGroup($data['linkshellid'], 'linkshell', $inmembers));
             #Running the queries we've accumulated
             (new \Simbiat\Database\Controller)->query($queries);
-            #Remove cron entry (if exists)
-            $this->CronRemove($data['linkshellid'], 'crossworldlinkshell');
             return true;
         } catch(Exception $e) {
-            #Update cron entry (if exists) with the error
-            $this->CronError($data['linkshellid'], 'crossworldlinkshell', $e->getTraceAsString());
-            return false;
+            return $e->getMessage()."\r\n".$e->getTraceAsString();
         }
     }
     
-    private function PVPUpdate(array $data): bool
+    private function PVPUpdate(array $data): string|bool
     {
         try {
             #Attempt to get crest
@@ -551,39 +538,77 @@ trait Updater
             $queries = array_merge($queries, $this->MassRemoveFromGroup($data['pvpteamid'], 'pvpteam', $inmembers));
             #Running the queries we've accumulated
             (new \Simbiat\Database\Controller)->query($queries);
-            #Remove cron entry (if exists)
-            $this->CronRemove($data['pvpteamid'], 'pvpteam');
             return true;
         } catch(Exception $e) {
-            #Update cron entry (if exists) with the error
-            $this->CronError($data['pvpteamid'], 'pvpteam', $e->getTraceAsString());
-            return false;
+            return $e->getMessage()."\r\n".$e->getTraceAsString();
         }
     }
     
-    #Update achievements with missing details
-    public function UpdateAchievements(): bool
+    #Update statistics
+    public function UpdateStatistics(): bool|string
     {
         try {
-            #Selection is limited to 10 achievements at once in order not to backlog Cron too much
-            $achievements = (new \Simbiat\Database\Controller)->selectAll(
-                'SELECT `'.$this->dbprefix.'achievement`.`achievementid`, `'.$this->dbprefix.'character_achievement`.`characterid` FROM `'.$this->dbprefix.'achievement` LEFT JOIN `'.$this->dbprefix.'character_achievement` ON `'.$this->dbprefix.'character_achievement`.`achievementid` = `'.$this->dbprefix.'achievement`.`achievementid` WHERE `category` IS NULL OR `howto` IS NULL OR `dbid` IS NULL OR `updated` <= DATE_ADD(UTC_TIMESTAMP(), INTERVAL -:maxage DAY) GROUP BY `'.$this->dbprefix.'achievement`.`achievementid` LIMIT 10',
+            foreach (['genetics', 'astrology', 'characters', 'freecompanies', 'cities', 'grandcompanies', 'servers', 'achievements', 'timelines', 'other'] as $type) {
+                $this->Statistics($type, '', true);
+            }
+            return true;
+        } catch(Exception $e) {
+            return $e->getMessage()."\r\n".$e->getTraceAsString();
+        }
+    }
+    
+    public function AchievementUpdate(array $data): bool|string
+    {
+        try {
+            #Unset entitytype
+            unset($data['entitytype']);
+            return (new \Simbiat\Database\Controller)->query('INSERT INTO `'.$this->dbprefix.'achievement` SET `achievementid`=:achievementid, `name`=:name, `icon`=:icon, `points`=:points, `category`=:category, `subcategory`=:subcategory, `howto`=:howto, `title`=:title, `item`=:item, `itemicon`=:itemicon, `itemid`=:itemid, `dbid`=:dbid ON DUPLICATE KEY UPDATE `achievementid`=:achievementid, `name`=:name, `icon`=:icon, `points`=:points, `category`=:category, `subcategory`=:subcategory, `howto`=:howto, `title`=:title, `item`=:item, `itemicon`=:itemicon, `itemid`=:itemid, `dbid`=:dbid, `updated`=UTC_TIMESTAMP()', $data);
+        } catch(Exception $e) {
+            return $e->getMessage()."\r\n".$e->getTraceAsString();
+        }
+    }
+    
+    #Function to update old entities
+    public function UpdateOld(int $limit = 1): bool|string
+    {
+        #Sanitize entities number
+        if ($limit < 1) {
+            $limit = 1;
+        }
+        try {
+            $dbcon = (new \Simbiat\Database\Controller);
+            $entities = $dbcon->selectAll('
+                    SELECT `type`, `id`, `charid` FROM (
+                        SELECT * FROM (
+                            SELECT \'character\' AS `type`, `characterid` AS `id`, \'\' AS `charid`, `updated`, `deleted` FROM `'.$this->dbprefix.'character`
+                            UNION ALL
+                            SELECT \'freecompany\' AS `type`, `freecompanyid` AS `id`, \'\' AS `charid`, `updated`, `deleted` FROM `'.$this->dbprefix.'freecompany`
+                            UNION ALL
+                            SELECT \'pvpteam\' AS `type`, `pvpteamid` AS `id`, \'\' AS `charid`, `updated`, `deleted` FROM `'.$this->dbprefix.'pvpteam`
+                            UNION ALL
+                            SELECT IF(`crossworld` = 0, \'linkshell\', \'crossworldlinkshell\') AS `type`, `linkshellid`, \'\' AS `charid`, `updated`, `deleted` AS `id` FROM `'.$this->dbprefix.'linkshell`
+                            WHERE `deleted` IS NULL
+                        ) `nonach`
+                        UNION ALL
+                        SELECT \'achievement\' AS `type`, `'.$this->dbprefix.'achievement`.`achievementid` AS `id`, (SELECT `characterid` FROM `'.$this->dbprefix.'character_achievement` WHERE `'.$this->dbprefix.'character_achievement`.`achievementid` = `'.$this->dbprefix.'achievement`.`achievementid` LIMIT 1) AS `charid`, `updated`, NULL AS `deleted` FROM `'.$this->dbprefix.'achievement`
+                    ) `allentities`
+                    ORDER BY `updated` ASC ASC LIMIT :maxlines',
                 [
-                    ':maxage'=>[$this->maxage, 'int'],
+                    ':maxlines'=>[$limit, 'int'],
                 ]
-                );
-            foreach ($achievements as $achievement) {
-                $bindings = $this->AchievementGrab($achievement['characterid'], $achievement['achievementid']);
-                if (!empty($bindings)) {
-                    (new \Simbiat\Database\Controller)->query('INSERT INTO `'.$this->dbprefix.'achievement` SET `achievementid`=:achievementid, `name`=:name, `icon`=:icon, `points`=:points, `category`=:category, `subcategory`=:subcategory, `howto`=:howto, `title`=:title, `item`=:item, `itemicon`=:itemicon, `itemid`=:itemid, `dbid`=:dbid ON DUPLICATE KEY UPDATE `achievementid`=:achievementid, `name`=:name, `icon`=:icon, `points`=:points, `category`=:category, `subcategory`=:subcategory, `howto`=:howto, `title`=:title, `item`=:item, `itemicon`=:itemicon, `itemid`=:itemid, `dbid`=:dbid', $bindings);
+            );
+            foreach ($entities as $entity) {
+                $result = $this->Update($entity['type'], strval($entity['id']), $entity['charid']);
+                if (!in_array($result, ['character', 'freecompany', 'linkshell', 'crossworldlinkshell', 'pvpteam', 'achievement'])) {
+                    return $result;
                 }
             }
             return true;
         } catch(Exception $e) {
-            return false;
+            return $e->getMessage()."\r\n".$e->getTraceAsString();
         }
     }
-       
+    
     #Helper function to not duplicate code for removal from groups
     private function RemoveFromGroup(string $characterid, string $grouptype): array
     {
@@ -647,9 +672,6 @@ trait Updater
             $queries = array_merge($queries, $this->RemoveFromGroup($id, 'pvpteam', '\'\''));
         }
         $result  = (new \Simbiat\Database\Controller)->query($queries);
-        if ($result === true) {
-            $this->CronRemove($id, $type);
-        }
         return $result;
     }
 }

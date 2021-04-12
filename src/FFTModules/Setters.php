@@ -101,7 +101,7 @@ trait Setters
     {
         $crestpath = $this->crestpath;
         if ($crestpath === '') {
-            $crestpath = dirname(dirname(__FILE__)).'/Images/merged-crests';
+            $crestpath = dirname(__DIR__).'/Images/merged-crests';
         }
         $this->crestpath = preg_replace('/(.*[^\\\\\/]{1,})([\\\\\/]{1,}$)/m', '$1', $crestpath).'/';
         return $this->crestpath;
