@@ -592,7 +592,7 @@ trait Updater
                         UNION ALL
                         SELECT \'achievement\' AS `type`, `'.$this->dbprefix.'achievement`.`achievementid` AS `id`, (SELECT `characterid` FROM `'.$this->dbprefix.'character_achievement` WHERE `'.$this->dbprefix.'character_achievement`.`achievementid` = `'.$this->dbprefix.'achievement`.`achievementid` LIMIT 1) AS `charid`, `updated`, NULL AS `deleted` FROM `'.$this->dbprefix.'achievement`
                     ) `allentities`
-                    ORDER BY `updated` ASC ASC LIMIT :maxlines',
+                    ORDER BY `updated` ASC LIMIT :maxlines',
                 [
                     ':maxlines'=>[$limit, 'int'],
                 ]

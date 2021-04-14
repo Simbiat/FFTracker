@@ -19,12 +19,7 @@ trait Crest
     private function CrestMerge(string $groupid, array $images): string
     {
         try {
-            #Checking if we have PvP or FC based on ID format and determining the path to save the file to
-            if (preg_match('/[a-zA-Z0-9]{40}/mi', $groupid)) {
-                $imgfolder = $this->pvpcrestpath;
-            } else {
-                $imgfolder = $this->fccrestpath;
-            }
+            $imgfolder = dirname(__DIR__).'/merged-crests/';
             #Checking if directory exists
             if (!file_exists($imgfolder)) {
                 #Creating directory
