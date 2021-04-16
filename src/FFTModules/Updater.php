@@ -177,12 +177,12 @@ trait Updater
             }
             if ($fccron) {
                 #If we have triggered this from within Free Company update, it will simply update the next run time which should not affect anything
-                $cron->add('ffentityupdate', ['freecompany', $data['freeCompany']['id']], message: 'Updating free company with ID '.$data['freeCompany']['id']);
+                $cron->add('ffentityupdate', ['freecompany', $data['freeCompany']['id']], message: 'Updating free company with ID '.$data['freeCompany']['id'], priority: 1);
             }
             #Register PvP Team update if change was detected
             if ($pvpcron) {
                 #If we have triggered this from within PvP Team update, it will simply update the next run time which should not affect anything
-                $cron->add('ffentityupdate', ['pvpteam', $data['pvp']['id']], message: 'Updating PvP team with ID '.$data['pvp']['id']);
+                $cron->add('ffentityupdate', ['pvpteam', $data['pvp']['id']], message: 'Updating PvP team with ID '.$data['pvp']['id'], priority: 1);
             }
             return true;
         } catch(\Exception $e) {
