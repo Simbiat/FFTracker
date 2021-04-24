@@ -65,7 +65,7 @@ trait Crest
             #Remove temporary file
             unlink($imgfolder.$groupid.'.png');
             return $hash;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return '';
         }
     }

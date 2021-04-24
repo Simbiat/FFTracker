@@ -396,7 +396,7 @@ trait Updater
             #Running the queries we've accumulated
             (new \Simbiat\Database\Controller)->query($queries);
             return true;
-        } catch(Exception $e) {
+        } catch(\Exception $e) {
             return $e->getMessage()."\r\n".$e->getTraceAsString();
         }
     }
@@ -466,7 +466,7 @@ trait Updater
             #Running the queries we've accumulated
             (new \Simbiat\Database\Controller)->query($queries);
             return true;
-        } catch(Exception $e) {
+        } catch(\Exception $e) {
             return $e->getMessage()."\r\n".$e->getTraceAsString();
         }
     }
@@ -539,7 +539,7 @@ trait Updater
             #Running the queries we've accumulated
             (new \Simbiat\Database\Controller)->query($queries);
             return true;
-        } catch(Exception $e) {
+        } catch(\Exception $e) {
             return $e->getMessage()."\r\n".$e->getTraceAsString();
         }
     }
@@ -552,7 +552,7 @@ trait Updater
                 $this->Statistics($type, '', true);
             }
             return true;
-        } catch(Exception $e) {
+        } catch(\Exception $e) {
             return $e->getMessage()."\r\n".$e->getTraceAsString();
         }
     }
@@ -563,7 +563,7 @@ trait Updater
             #Unset entitytype
             unset($data['entitytype']);
             return (new \Simbiat\Database\Controller)->query('INSERT INTO `'.$this->dbprefix.'achievement` SET `achievementid`=:achievementid, `name`=:name, `icon`=:icon, `points`=:points, `category`=:category, `subcategory`=:subcategory, `howto`=:howto, `title`=:title, `item`=:item, `itemicon`=:itemicon, `itemid`=:itemid, `dbid`=:dbid ON DUPLICATE KEY UPDATE `achievementid`=:achievementid, `name`=:name, `icon`=:icon, `points`=:points, `category`=:category, `subcategory`=:subcategory, `howto`=:howto, `title`=:title, `item`=:item, `itemicon`=:itemicon, `itemid`=:itemid, `dbid`=:dbid, `updated`=UTC_TIMESTAMP()', $data);
-        } catch(Exception $e) {
+        } catch(\Exception $e) {
             return $e->getMessage()."\r\n".$e->getTraceAsString();
         }
     }
@@ -604,7 +604,7 @@ trait Updater
                 }
             }
             return true;
-        } catch(Exception $e) {
+        } catch(\Exception $e) {
             return $e->getMessage()."\r\n".$e->getTraceAsString();
         }
     }
