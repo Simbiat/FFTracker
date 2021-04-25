@@ -8,7 +8,7 @@ trait Updater
     #Update data
     private function EntityUpdate(array $data): string|bool
     {
-        return match($data['entitytype']) {
+        return match(@$data['entitytype']) {
             'character' => $this->CharacterUpdate($data),
             'freecompany' => $this->CompanyUpdate($data),
             'linkshell' => $this->LinkshellUpdate($data),
