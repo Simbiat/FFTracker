@@ -224,6 +224,8 @@ trait Output
         }
         #Get old names. For now this is commented out due to cases of bullying, when the old names are learnt. They are still being collected, though for statistical purposes.
         #$data['oldnames'] = $dbcon->selectColumn('SELECT `name` FROM `'.$this->dbprefix.'character_names` WHERE `characterid`=:id AND `name`!=:name', [':id'=>$id, ':name'=>$data['name']]);
+        #Get levels
+        $data['jobs'] = $dbcon->selectPair('SELECT `'.$this->dbprefix.'job`.`name` AS `job`, `level` FROM `'.$this->dbprefix.'character_jobs` INNER JOIN `'.$this->dbprefix.'job` ON `'.$this->dbprefix.'job`.`jobid`=`'.$this->dbprefix.'character_jobs`.`jobid` WHERE `characterid`=:id;', [':id'=>$id]);
         #Get previous known incarnations (combination of gender and race/clan)
         $data['incarnations'] = $dbcon->selectAll('SELECT `genderid`, `'.$this->dbprefix.'clan`.`race`, `'.$this->dbprefix.'clan`.`clan` FROM `'.$this->dbprefix.'character_clans` LEFT JOIN `'.$this->dbprefix.'clan` ON `'.$this->dbprefix.'character_clans`.`clanid` = `'.$this->dbprefix.'clan`.`clanid` WHERE `'.$this->dbprefix.'character_clans`.`characterid`=:id AND (`'.$this->dbprefix.'character_clans`.`clanid`!=:clanid AND `'.$this->dbprefix.'character_clans`.`genderid`!=:genderid) ORDER BY `genderid` ASC, `race` ASC, `clan` ASC', [':id'=>$id, ':clanid'=>$data['clanid'], ':genderid'=>$data['genderid']]);
         #Get old servers
@@ -541,6 +543,12 @@ trait Output
                 }
                 break;
             case 'characters':
+                #Jobs popularity
+                if (!$nocache && !empty($json['characters']['jobs'])) {
+                    $data['characters']['jobs'] = $json['characters']['jobs'];
+                } else {
+                    $data['characters']['jobs'] = $dbcon->selectPair('SELECT `'.$this->dbprefix.'job`.`name` AS `job`, `sum`.`level` FROM (SELECT `jobid`, SUM(`level`) AS `level` FROM `'.$this->dbprefix.'character_jobs` GROUP BY `jobid`) AS `sum` INNER JOIN `'.$this->dbprefix.'job` ON `sum`.`jobid`=`'.$this->dbprefix.'job`.`jobid` ORDER BY `sum`.`level` DESC;');
+                }
                 #Most name changes
                 if (!$nocache && !empty($json['characters']['changes']['name'])) {
                     $data['characters']['changes']['name'] = $json['characters']['changes']['name'];

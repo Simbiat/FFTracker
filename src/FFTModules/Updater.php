@@ -28,13 +28,13 @@ trait Updater
             #Main query to insert or update a character
             $queries[] = [
                 'INSERT INTO `'.$this->dbprefix.'character`(
-                    `characterid`, `serverid`, `name`, `registered`, `updated`, `deleted`, `biography`, `titleid`, `avatar`, `clanid`, `genderid`, `namedayid`, `guardianid`, `cityid`, `gcrankid`, `Alchemist`, `Armorer`, `Astrologian`, `Bard`, `BlackMage`, `Blacksmith`, `BlueMage`, `Botanist`, `Carpenter`, `Culinarian`, `Dancer`, `DarkKnight`, `Dragoon`, `Fisher`, `Goldsmith`, `Gunbreaker`, `Leatherworker`, `Machinist`, `Miner`, `Monk`, `Ninja`, `Paladin`, `RedMage`, `Samurai`, `Scholar`, `Summoner`, `Warrior`, `Weaver`, `WhiteMage`
+                    `characterid`, `serverid`, `name`, `registered`, `updated`, `deleted`, `biography`, `titleid`, `avatar`, `clanid`, `genderid`, `namedayid`, `guardianid`, `cityid`, `gcrankid`
                 )
                 VALUES (
-                    :characterid, (SELECT `serverid` FROM `'.$this->dbprefix.'server` WHERE `server`=:server), :name, UTC_DATE(), UTC_TIMESTAMP(), NULL, :biography, (SELECT `achievementid` as `titleid` FROM `'.$this->dbprefix.'achievement` WHERE `title` IS NOT NULL AND `title`=:title LIMIT 1), :avatar, (SELECT `clanid` FROM `'.$this->dbprefix.'clan` WHERE `clan`=:clan), :genderid, (SELECT `namedayid` FROM `'.$this->dbprefix.'nameday` WHERE `nameday`=:nameday), (SELECT `guardianid` FROM `'.$this->dbprefix.'guardian` WHERE `guardian`=:guardian), (SELECT `cityid` FROM `'.$this->dbprefix.'city` WHERE `city`=:city), `gcrankid` = (SELECT `gcrankid` FROM `'.$this->dbprefix.'grandcompany_rank` WHERE `gc_rank` IS NOT NULL AND `gc_rank`=:gcrank ORDER BY `gcrankid` ASC LIMIT 1), :Alchemist, :Armorer, :Astrologian, :Bard, :BlackMage, :Blacksmith, :BlueMage, :Botanist, :Carpenter, :Culinarian, :Dancer, :DarkKnight, :Dragoon, :Fisher, :Goldsmith, :Gunbreaker, :Leatherworker, :Machinist, :Miner, :Monk, :Ninja, :Paladin, :RedMage, :Samurai, :Scholar, :Summoner, :Warrior, :Weaver, :WhiteMage
+                    :characterid, (SELECT `serverid` FROM `'.$this->dbprefix.'server` WHERE `server`=:server), :name, UTC_DATE(), UTC_TIMESTAMP(), NULL, :biography, (SELECT `achievementid` as `titleid` FROM `'.$this->dbprefix.'achievement` WHERE `title` IS NOT NULL AND `title`=:title LIMIT 1), :avatar, (SELECT `clanid` FROM `'.$this->dbprefix.'clan` WHERE `clan`=:clan), :genderid, (SELECT `namedayid` FROM `'.$this->dbprefix.'nameday` WHERE `nameday`=:nameday), (SELECT `guardianid` FROM `'.$this->dbprefix.'guardian` WHERE `guardian`=:guardian), (SELECT `cityid` FROM `'.$this->dbprefix.'city` WHERE `city`=:city), `gcrankid` = (SELECT `gcrankid` FROM `'.$this->dbprefix.'grandcompany_rank` WHERE `gc_rank` IS NOT NULL AND `gc_rank`=:gcrank ORDER BY `gcrankid` ASC LIMIT 1)
                 )
                 ON DUPLICATE KEY UPDATE
-                    `serverid`=(SELECT `serverid` FROM `'.$this->dbprefix.'server` WHERE `server`=:server), `name`=:name, `updated`=UTC_TIMESTAMP(), `deleted`=NULL, `biography`=:biography, `titleid`=(SELECT `achievementid` as `titleid` FROM `'.$this->dbprefix.'achievement` WHERE `title` IS NOT NULL AND `title`=:title LIMIT 1), `avatar`=:avatar, `clanid`=(SELECT `clanid` FROM `'.$this->dbprefix.'clan` WHERE `clan`=:clan), `genderid`=:genderid, `namedayid`=(SELECT `namedayid` FROM `'.$this->dbprefix.'nameday` WHERE `nameday`=:nameday), `guardianid`=(SELECT `guardianid` FROM `'.$this->dbprefix.'guardian` WHERE `guardian`=:guardian), `cityid`=(SELECT `cityid` FROM `'.$this->dbprefix.'city` WHERE `city`=:city), `gcrankid`=(SELECT `gcrankid` FROM `'.$this->dbprefix.'grandcompany_rank` WHERE `gc_rank` IS NOT NULL AND `gc_rank`=:gcrank ORDER BY `gcrankid` ASC LIMIT 1), `Alchemist`=GREATEST(`Alchemist`, :Alchemist), `Armorer`=GREATEST(`Armorer`, :Armorer), `Astrologian`=GREATEST(`Astrologian`, :Astrologian), `Bard`=GREATEST(`Bard`, :Bard), `BlackMage`=GREATEST(`BlackMage`, :BlackMage), `Blacksmith`=GREATEST(`Blacksmith`, :Blacksmith), `BlueMage`=GREATEST(`BlueMage`, :BlueMage), `Botanist`=GREATEST(`Botanist`, :Botanist), `Carpenter`=GREATEST(`Carpenter`, :Carpenter), `Culinarian`=GREATEST(`Culinarian`, :Culinarian), `Dancer`=GREATEST(`Dancer`, :Dancer), `DarkKnight`=GREATEST(`DarkKnight`, :DarkKnight), `Dragoon`=GREATEST(`Dragoon`, :Dragoon), `Fisher`=GREATEST(`Fisher`, :Fisher), `Goldsmith`=GREATEST(`Goldsmith`, :Goldsmith), `Gunbreaker`=GREATEST(`Gunbreaker`, :Gunbreaker), `Leatherworker`=GREATEST(`Leatherworker`, :Leatherworker), `Machinist`=GREATEST(`Machinist`, :Machinist), `Miner`=GREATEST(`Miner`, :Miner), `Monk`=GREATEST(`Monk`, :Monk), `Ninja`=GREATEST(`Ninja`, :Ninja), `Paladin`=GREATEST(`Paladin`, :Paladin), `RedMage`=GREATEST(`RedMage`, :RedMage), `Samurai`=GREATEST(`Samurai`, :Samurai), `Scholar`=GREATEST(`Scholar`, :Scholar), `Summoner`=GREATEST(`Summoner`, :Summoner), `Warrior`=GREATEST(`Warrior`, :Warrior), `Weaver`=GREATEST(`Weaver`, :Weaver), `WhiteMage`=GREATEST(`WhiteMage`, :WhiteMage);',
+                    `serverid`=(SELECT `serverid` FROM `'.$this->dbprefix.'server` WHERE `server`=:server), `name`=:name, `updated`=UTC_TIMESTAMP(), `deleted`=NULL, `biography`=:biography, `titleid`=(SELECT `achievementid` as `titleid` FROM `'.$this->dbprefix.'achievement` WHERE `title` IS NOT NULL AND `title`=:title LIMIT 1), `avatar`=:avatar, `clanid`=(SELECT `clanid` FROM `'.$this->dbprefix.'clan` WHERE `clan`=:clan), `genderid`=:genderid, `namedayid`=(SELECT `namedayid` FROM `'.$this->dbprefix.'nameday` WHERE `nameday`=:nameday), `guardianid`=(SELECT `guardianid` FROM `'.$this->dbprefix.'guardian` WHERE `guardian`=:guardian), `cityid`=(SELECT `cityid` FROM `'.$this->dbprefix.'city` WHERE `city`=:city), `gcrankid`=(SELECT `gcrankid` FROM `'.$this->dbprefix.'grandcompany_rank` WHERE `gc_rank` IS NOT NULL AND `gc_rank`=:gcrank ORDER BY `gcrankid` ASC LIMIT 1);',
                 [
                     ':characterid'=>$data['characterid'],
                     ':server'=>$data['server'],
@@ -51,37 +51,26 @@ trait Updater
                     ':guardian'=>$data['guardian']['name'],
                     ':city'=>$data['city']['name'],
                     ':gcrank'=>(empty($data['grandCompany']['rank']) ? '' : $data['grandCompany']['rank']),
-                    ':Alchemist'=>(empty($data['jobs']['Alchemist']['level']) ? '0' : $data['jobs']['Alchemist']['level']),
-                    ':Armorer'=>(empty($data['jobs']['Armorer']['level']) ? '0' : $data['jobs']['Armorer']['level']),
-                    ':Astrologian'=>(empty($data['jobs']['Astrologian']['level']) ? '0' : $data['jobs']['Astrologian']['level']),
-                    ':Bard'=>(empty($data['jobs']['Bard']['level']) ? '0' : $data['jobs']['Bard']['level']),
-                    ':BlackMage'=>(empty($data['jobs']['Black Mage']['level']) ? '0' : $data['jobs']['Black Mage']['level']),
-                    ':Blacksmith'=>(empty($data['jobs']['Blacksmith']['level']) ? '0' : $data['jobs']['Blacksmith']['level']),
-                    ':BlueMage'=>(empty($data['jobs']['Blue Mage']['level']) ? '0' : $data['jobs']['Blue Mage']['level']),
-                    ':Botanist'=>(empty($data['jobs']['Botanist']['level']) ? '0' : $data['jobs']['Botanist']['level']),
-                    ':Carpenter'=>(empty($data['jobs']['Carpenter']['level']) ? '0' : $data['jobs']['Carpenter']['level']),
-                    ':Culinarian'=>(empty($data['jobs']['Culinarian']['level']) ? '0' : $data['jobs']['Culinarian']['level']),
-                    ':Dancer'=>(empty($data['jobs']['Dancer']['level']) ? '0' : $data['jobs']['Dancer']['level']),
-                    ':DarkKnight'=>(empty($data['jobs']['Dark Knight']['level']) ? '0' : $data['jobs']['Dark Knight']['level']),
-                    ':Dragoon'=>(empty($data['jobs']['Dragoon']['level']) ? '0' : $data['jobs']['Dragoon']['level']),
-                    ':Fisher'=>(empty($data['jobs']['Fisher']['level']) ? '0' : $data['jobs']['Fisher']['level']),
-                    ':Goldsmith'=>(empty($data['jobs']['Goldsmith']['level']) ? '0' : $data['jobs']['Goldsmith']['level']),
-                    ':Gunbreaker'=>(empty($data['jobs']['Gunbreaker']['level']) ? '0' : $data['jobs']['Gunbreaker']['level']),
-                    ':Leatherworker'=>(empty($data['jobs']['Leatherworker']['level']) ? '0' : $data['jobs']['Leatherworker']['level']),
-                    ':Machinist'=>(empty($data['jobs']['Machinist']['level']) ? '0' : $data['jobs']['Machinist']['level']),
-                    ':Miner'=>(empty($data['jobs']['Miner']['level']) ? '0' : $data['jobs']['Miner']['level']),
-                    ':Monk'=>(empty($data['jobs']['Monk']['level']) ? '0' : $data['jobs']['Monk']['level']),
-                    ':Ninja'=>(empty($data['jobs']['Ninja']['level']) ? '0' : $data['jobs']['Ninja']['level']),
-                    ':Paladin'=>(empty($data['jobs']['Paladin']['level']) ? '0' : $data['jobs']['Paladin']['level']),
-                    ':RedMage'=>(empty($data['jobs']['Red Mage']['level']) ? '0' : $data['jobs']['Red Mage']['level']),
-                    ':Samurai'=>(empty($data['jobs']['Samurai']['level']) ? '0' : $data['jobs']['Samurai']['level']),
-                    ':Scholar'=>(empty($data['jobs']['Scholar']['level']) ? '0' : $data['jobs']['Scholar']['level']),
-                    ':Summoner'=>(empty($data['jobs']['Summoner']['level']) ? '0' : $data['jobs']['Summoner']['level']),
-                    ':Warrior'=>(empty($data['jobs']['Warrior']['level']) ? '0' : $data['jobs']['Warrior']['level']),
-                    ':Weaver'=>(empty($data['jobs']['Weaver']['level']) ? '0' : $data['jobs']['Weaver']['level']),
-                    ':WhiteMage'=>(empty($data['jobs']['White Mage']['level']) ? '0' : $data['jobs']['White Mage']['level']),
                 ],
             ];
+            #Add levels
+            foreach ($data['jobs'] as $job=>$level) {
+                #Insert job (we lose performance a tiny bit, but this allows to automatically add new jobs and avoid failures on next step)
+                $query[] = [
+                    'INSERT IGNORE INTO `'.$this->dbprefix.'job` (`name`) VALUES (:job);',
+                    [
+                        ':job' => [$job, 'string'],
+                    ]
+                ];
+                #Insert actual level
+                $query[] = [
+                    'INSERT INTO `'.$this->dbprefix.'character_jobs`(`characterid`, `jobid`, `level`) VALUES (:characterid, (SELECT `jobid` FROM `'.$this->dbprefix.'job` WHERE `name`=:job) AS `jobid`, :level) ON DUPLICATE KEY UPDATE `level`=:level;',
+                    [
+                        ':job' => [$job, 'string'],
+                        ':level' => [(empty($level) ? 0 : intval($level)), 'int'],
+                    ],
+                ];
+            }
             #Insert server, if it has not been inserted yet
             $queries[] = [
                 'INSERT INTO `'.$this->dbprefix.'character_servers`(`characterid`, `serverid`) VALUES (:characterid, (SELECT `serverid` FROM `'.$this->dbprefix.'server` WHERE `server`=:server)) ON DUPLICATE KEY UPDATE `serverid`=`serverid`;',
