@@ -6,6 +6,7 @@ class FFTracker
 {
     #Allowed languages
     const langallowed = ['na', 'jp', 'ja', 'eu', 'fr', 'de'];
+    private ?\Simbiat\HTMLCache $HTMLCache = NULL;
     
     #Use traits
     use FFTModules\Setters;
@@ -14,7 +15,7 @@ class FFTracker
     use FFTModules\Crest;
     use FFTModules\Output;
     
-    public function __construct(string $dbprefix = '', string $language = 'na', int $maxAge = 90, int $maxLines = 50, string $userAgent = '')
+    public function __construct(string $dbprefix = '', string $language = 'na', int $maxAge = 90, int $maxLines = 50, string $userAgent = '', string $cacheDir = '')
     {
         $this->setDbPrefix($dbprefix);
         $this->setLanguage($language);
@@ -22,6 +23,14 @@ class FFTracker
         $this->setMaxage($maxAge);
         $this->setMaxlines($maxLines);
         $this->getCrestPath();
+        #Checking if HTML Cache is used
+        if (method_exists('\Simbiat\HTMLCache','delete')) {
+            if (empty($cacheDir)) {
+                $this->HTMLCache = (new \Simbiat\HTMLCache());
+            } else {
+                $this->HTMLCache = (new \Simbiat\HTMLCache($cacheDir));
+            }
+        }
     }
     
     public function Update(string $type = '', string $id, string $charid = ''): string|bool
@@ -32,11 +41,22 @@ class FFTracker
             if (isset($data['404']) && $data['404'] === true) {
                 #Means that entity was removed from Lodestone
                 #Mark as deleted in tracker
-                return $this->DeleteEntity($id, $data['entitytype']);
+                $result = $this->DeleteEntity($id, $data['entitytype']);
+                if ($result === true) {
+                    #Clean cache
+                    if ($this->HTMLCache !== NULL) {
+                        $this->HTMLCache->delete('fftracker/'.$data['entitytype'].'/'.$id);
+                    }
+                }
+                return $result;
             } else {
                 #Data was retrieved, update entity
                 $result = $this->EntityUpdate($data);
                 if ($result === true) {
+                    #Clean cache
+                    if ($this->HTMLCache !== NULL) {
+                        $this->HTMLCache->delete('fftracker/'.$data['entitytype'].'/'.$id);
+                    }
                     return $data['entitytype'];
                 } else {
                     return $result;
