@@ -7,9 +7,10 @@ trait Output
     #Function to prepare data based on URI. Not required generally, this is custom logic for https://simbiat.ru/fftracker only
     public function uriParse(array $uri): array
     {
+        $headers = (new \Simbiat\http20\Headers);
         #Check if URI is empty
         if (empty($uri)) {
-            (new \Simbiat\http20\Headers)->redirect('https://'.$_SERVER['HTTP_HOST'].($_SERVER['SERVER_PORT'] != 443 ? ':'.$_SERVER['SERVER_PORT'] : '').'/fftracker/search', true, true, false);
+            $headers->redirect('https://'.$_SERVER['HTTP_HOST'].($_SERVER['SERVER_PORT'] != 443 ? ':'.$_SERVER['SERVER_PORT'] : '').'/fftracker/search', true, true, false);
         }
         #Prepare array
         $outputArray = [
@@ -48,7 +49,7 @@ trait Output
             case 'statistics':
                 #Check if type is set
                 if (empty($uri[1])) {
-                    (new \Simbiat\http20\Headers)->redirect('https://'.$_SERVER['HTTP_HOST'].($_SERVER['SERVER_PORT'] != 443 ? ':'.$_SERVER['SERVER_PORT'] : '').'/fftracker/statistics/genetics', true, true, false);
+                    $headers->redirect('https://'.$_SERVER['HTTP_HOST'].($_SERVER['SERVER_PORT'] != 443 ? ':'.$_SERVER['SERVER_PORT'] : '').'/fftracker/statistics/genetics', true, true, false);
                 } else {
                     $uri[1] = strtolower($uri[1]);
                     if (in_array($uri[1], ['genetics', 'astrology', 'characters', 'freecompanies', 'cities', 'grandcompanies', 'servers', 'achievements', 'timelines', 'other'])) {
@@ -73,7 +74,7 @@ trait Output
             case 'crossworldlinkshells':
             case 'crossworld_linkshells':
                 #Redirect to linkshells list, since we do not differentiate between them that much
-                (new \Simbiat\http20\Headers)->redirect('https://'.$_SERVER['HTTP_HOST'].($_SERVER['SERVER_PORT'] != 443 ? ':'.$_SERVER['SERVER_PORT'] : '').'/fftracker/linkshells/'.(empty($uri[1]) ? '' : $uri[1]), true, true, false);
+                $headers->redirect('https://'.$_SERVER['HTTP_HOST'].($_SERVER['SERVER_PORT'] != 443 ? ':'.$_SERVER['SERVER_PORT'] : '').'/fftracker/linkshells/'.(empty($uri[1]) ? '' : $uri[1]), true, true, false);
                 break;
             case 'freecompanies':
             case 'linkshells':
@@ -82,7 +83,7 @@ trait Output
             case 'pvpteams':
                 #Check if page was provided and is numeric
                 if (empty($uri[1]) || !is_numeric($uri[1]) || intval($uri[1]) < 1) {
-                    (new \Simbiat\http20\Headers)->redirect('https://'.$_SERVER['HTTP_HOST'].($_SERVER['SERVER_PORT'] != 443 ? ':'.$_SERVER['SERVER_PORT'] : '').'/fftracker/'.$uri[0].'/1', true, true, false);
+                    $headers->redirect('https://'.$_SERVER['HTTP_HOST'].($_SERVER['SERVER_PORT'] != 443 ? ':'.$_SERVER['SERVER_PORT'] : '').'/fftracker/'.$uri[0].'/1', true, true, false);
                 }
                 #Ensure that use INT
                 $uri[1] = intval($uri[1]);
@@ -96,7 +97,7 @@ trait Output
                     $outputArray['http_error'] = 404;
                 } else {
                     #Try to get out earlier based on date of last update of the list. Unlikely, that will help, but still.
-                    (new \Simbiat\http20\Headers)->lastModified($outputArray['searchresult']['statistics']['updated'], true);
+                    $headers->lastModified($outputArray['searchresult']['statistics']['updated'], true);
                     $outputArray['subservice'] = 'list';
                     #Adjust list type to human-readable value
                     $tempname = match($uri[0]) {
@@ -121,7 +122,7 @@ trait Output
             case 'crossworldlinkshell':
             case 'crossworld_linkshell':
                 #Redirect to linkshell page, since we do not differentiate between them that much
-                (new \Simbiat\http20\Headers)->redirect('https://'.$_SERVER['HTTP_HOST'].($_SERVER['SERVER_PORT'] != 443 ? ':'.$_SERVER['SERVER_PORT'] : '').'/fftracker/linkshell/'.(empty($uri[1]) ? '' : $uri[1]), true, true, false);
+                $headers->redirect('https://'.$_SERVER['HTTP_HOST'].($_SERVER['SERVER_PORT'] != 443 ? ':'.$_SERVER['SERVER_PORT'] : '').'/fftracker/linkshell/'.(empty($uri[1]) ? '' : $uri[1]), true, true, false);
                 break;
             case 'achievement':
             case 'character':
@@ -140,7 +141,6 @@ trait Output
                     } else {
                         $outputArray['subservice'] = $uri[0];
                         #Try to exit early based on modification date
-                        $headers = (new \Simbiat\http20\Headers);
                         $headers->lastModified($outputArray[$uri[0]]['updated'], true);
                         #Continue breadcrumb by adding link to list (1 page)
                         $breadarray[] = match($uri[0]) {
