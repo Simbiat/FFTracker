@@ -7,6 +7,8 @@ trait Output
     #Function to prepare data based on URI. Not required generally, this is custom logic for https://simbiat.ru/fftracker only
     public function uriParse(array $uri): array
     {
+        var_dump($this->Update('achievement','1656','8663250'));
+        exit;
         $headers = (new \Simbiat\http20\Headers);
         #Check if URI is empty
         if (empty($uri)) {

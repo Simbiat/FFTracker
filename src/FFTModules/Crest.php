@@ -19,7 +19,7 @@ trait Crest
     private function CrestMerge(string $groupid, array $images): string
     {
         try {
-            $imgfolder = dirname(__DIR__).'/merged-crests/';
+            $imgfolder = dirname(__DIR__).'/Images/merged-crests/';
             #Checking if directory exists
             if (!file_exists($imgfolder)) {
                 #Creating directory

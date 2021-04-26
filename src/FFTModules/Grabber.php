@@ -219,14 +219,15 @@ trait Grabber
         return $data;
     }
     
-    private function AchievementGrab(string $character, string $achievement): array
+    private function AchievementGrab(string $character, string $achievement): string|array
     {
         #Grab data
         $Lodestone = (new \Simbiat\Lodestone)->setUseragent($this->useragent)->setLanguage($this->language);
         $data = NULL;
         $data = $Lodestone->getCharacterAchievements($character, intval($achievement))->getResult();
         if (empty($data['characters'][$character]['achievements'][$achievement])) {
-            return [];
+            $error = $Lodestone->getLastError();
+            return $error['error'].' ('.$error['url'].')';
         }
         #Try to get achievement ID as seen in Lodestone database (playguide)
         $data = $Lodestone->searchDatabase('achievement', 0, 0, $data['characters'][$character]['achievements'][$achievement]['name'])->getResult();
