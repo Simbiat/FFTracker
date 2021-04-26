@@ -227,8 +227,32 @@ trait Grabber
         $data = $Lodestone->getCharacterAchievements($character, intval($achievement))->getResult();
         if (empty($data['characters'][$character]['achievements'][$achievement])) {
             $error = $Lodestone->getLastError();
-            return $error['error'].' ('.$error['url'].')';
+            #Attempt to get other characters
+            if ($error['error'] === 'Requests are (temporary) blocked, 403') {
+                $dbcon = (new \Simbiat\Database\Controller);
+                #Get characters
+                $altChars = $dbcon->selectColumn(
+                    'SELECT `characterid` FROM `'.$this->dbprefix.'character_achievement` WHERE `achievementid`=:ach AND `characterid` !=:char ORDER BY `time` DESC;',
+                    [
+                        ':ach' => $achievement,
+                        ':char' => $character,
+                    ]
+                );
+                #Iterrate list
+                foreach ($altChars as $char) {
+                    $data = $Lodestone->getCharacterAchievements($char, intval($achievement))->getResult();
+                    if (!empty($data['characters'][$char]['achievements'][$achievement])) {
+                        #Update character ID
+                        $character = $char;
+                        goto datafound;
+                    }
+                }
+                return $error['error'].' ('.$error['url'].')';
+            } else {
+                return $error['error'].' ('.$error['url'].')';
+            }
         }
+        datafound:
         #Try to get achievement ID as seen in Lodestone database (playguide)
         $data = $Lodestone->searchDatabase('achievement', 0, 0, $data['characters'][$character]['achievements'][$achievement]['name'])->getResult();
         #Remove counts elements from achievement database

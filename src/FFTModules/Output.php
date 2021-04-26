@@ -7,8 +7,6 @@ trait Output
     #Function to prepare data based on URI. Not required generally, this is custom logic for https://simbiat.ru/fftracker only
     public function uriParse(array $uri): array
     {
-        var_dump($this->Update('achievement','1656','8663250'));
-        exit;
         $headers = (new \Simbiat\http20\Headers);
         #Check if URI is empty
         if (empty($uri)) {
@@ -41,7 +39,7 @@ trait Output
                     $breadarray[] = ['href'=>'/fftracker/search/'.$uri[1], 'name'=>'Search for '.$decodedSearch];
                 } else {
                     #Cache due to random entities
-                    $outputArray['cache_age'] = 259200;
+                    $outputArray['cache_age'] = 86400;
                 }
                 #Set specific values
                 $outputArray['searchvalue'] = $decodedSearch;
@@ -67,6 +65,7 @@ trait Output
                         $outputArray['h1'] .= ': Statistics';
                         $outputArray['title'] .= ': Statistics';
                         $outputArray['ogdesc'] = $tempname.' on '.$outputArray['ogdesc'];
+                        $outputArray['cache_age'] = 86400;
                     } else {
                         $outputArray['http_error'] = 404;
                     }
@@ -152,36 +151,36 @@ trait Output
                         };
                         #Continue breadcrumb by adding link to current entity
                         $breadarray[] = ['href' => '/fftracker/'.$uri[0].'/'.$outputArray[$uri[0]][$uri[0].'id'].'/'.rawurlencode($outputArray[$uri[0]]['name']), 'name' => $outputArray[$uri[0]]['name']];
-                    }
-                    #Generate levels' list if we have members
-                    if (!empty($outputArray[$uri[0]]['members'])) {
-                        $outputArray[$uri[0]]['levels'] = array_unique(array_column($outputArray[$uri[0]]['members'], 'rank'));
-                    }
-                    #Update meta
-                    $outputArray['h1'] = $outputArray[$uri[0]]['name'];
-                    $outputArray['title'] = $outputArray[$uri[0]]['name'];
-                    $outputArray['ogdesc'] = $outputArray[$uri[0]]['name'].' on '.$outputArray['ogdesc'];
-                    #Setup OG profile for characters
-                    if ($uri[0] === 'character') {
-                        $outputArray['ogtype'] = 'profile';
-                        $profname = explode(' ', $outputArray[$uri[0]]['name']);
-                        $outputArray['ogextra'] = '
-                            <meta property="og:type" content="profile" />
-                            <meta property="profile:first_name" content="'.htmlspecialchars($profname[0]).'" />
-                            <meta property="profile:last_name" content="'.htmlspecialchars($profname[1]).'" />
-                            <meta property="profile:username" content="'.htmlspecialchars($outputArray[$uri[0]]['name']).'" />
-                            <meta property="profile:gender" content="'.htmlspecialchars(($outputArray[$uri[0]]['genderid'] === 1 ? 'male' : 'female')).'" />
-                        ';
-                    }
-                    #Link header/tag for API
-                    $altlink = [['rel' => 'alternate', 'type' => 'application/json', 'title' => 'JSON representation', 'href' => '/api/fftracker/'.$uri[0].'/'.$outputArray[$uri[0]][$uri[0].'id']]];
-                    #Send HTTP header
-                    $headers->links($altlink);
-                    #Add link to HTML
-                    $outputArray['link_extra'] = $headers->links($altlink, 'head');
-                    #Cache age for achivements (due to random characters)
-                    if ($uri[0] === 'achievement') {
-                        $outputArray['cache_age'] = 259200;
+                        #Generate levels' list if we have members
+                        if (!empty($outputArray[$uri[0]]['members'])) {
+                            $outputArray[$uri[0]]['levels'] = array_unique(array_column($outputArray[$uri[0]]['members'], 'rank'));
+                        }
+                        #Update meta
+                        $outputArray['h1'] = $outputArray[$uri[0]]['name'];
+                        $outputArray['title'] = $outputArray[$uri[0]]['name'];
+                        $outputArray['ogdesc'] = $outputArray[$uri[0]]['name'].' on '.$outputArray['ogdesc'];
+                        #Setup OG profile for characters
+                        if ($uri[0] === 'character') {
+                            $outputArray['ogtype'] = 'profile';
+                            $profname = explode(' ', $outputArray[$uri[0]]['name']);
+                            $outputArray['ogextra'] = '
+                                <meta property="og:type" content="profile" />
+                                <meta property="profile:first_name" content="'.htmlspecialchars($profname[0]).'" />
+                                <meta property="profile:last_name" content="'.htmlspecialchars($profname[1]).'" />
+                                <meta property="profile:username" content="'.htmlspecialchars($outputArray[$uri[0]]['name']).'" />
+                                <meta property="profile:gender" content="'.htmlspecialchars(($outputArray[$uri[0]]['genderid'] === 1 ? 'male' : 'female')).'" />
+                            ';
+                        }
+                        #Link header/tag for API
+                        $altlink = [['rel' => 'alternate', 'type' => 'application/json', 'title' => 'JSON representation', 'href' => '/api/fftracker/'.$uri[0].'/'.$outputArray[$uri[0]][$uri[0].'id']]];
+                        #Send HTTP header
+                        $headers->links($altlink);
+                        #Add link to HTML
+                        $outputArray['link_extra'] = $headers->links($altlink, 'head');
+                        #Cache age for achivements (due to random characters)
+                        if ($uri[0] === 'achievement') {
+                            $outputArray['cache_age'] = 259200;
+                        }
                     }
                 }
                 break;
