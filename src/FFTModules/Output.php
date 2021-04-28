@@ -459,7 +459,7 @@ trait Output
         }
         #Sanitize cachepath
         if (empty($cachepath)) {
-            $cachepath = sys_get_temp_dir().'/ffstatitics.json';
+            $cachepath = dirname(__DIR__).'/ffstatitics.json';
         }
         #Check if cache file exists
         if (is_file($cachepath)) {
@@ -479,7 +479,7 @@ trait Output
             }
         } else {
             $json = [];
-        }         
+        }    
         #Get Lodestone object for optimization
         $Lodestone = (new \Simbiat\LodestoneModules\Converters);
         #Get ArrayHelpers object for optimization
