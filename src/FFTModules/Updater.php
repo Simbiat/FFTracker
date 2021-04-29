@@ -581,7 +581,7 @@ trait Updater
                             WHERE `deleted` IS NULL
                         ) `nonach`
                         UNION ALL
-                        SELECT \'achievement\' AS `type`, `'.$this->dbprefix.'achievement`.`achievementid` AS `id`, (SELECT `characterid` FROM `'.$this->dbprefix.'character_achievement` WHERE `'.$this->dbprefix.'character_achievement`.`achievementid` = `'.$this->dbprefix.'achievement`.`achievementid` LIMIT 1) AS `charid`, `updated`, NULL AS `deleted` FROM `'.$this->dbprefix.'achievement`
+                        SELECT \'achievement\' AS `type`, `'.$this->dbprefix.'achievement`.`achievementid` AS `id`, (SELECT `characterid` FROM `'.$this->dbprefix.'character_achievement` WHERE `'.$this->dbprefix.'character_achievement`.`achievementid` = `'.$this->dbprefix.'achievement`.`achievementid` LIMIT 1) AS `charid`, `updated`, NULL AS `deleted` FROM `'.$this->dbprefix.'achievement` HAVING `charid` IS NOT NULL
                     ) `allentities`
                     ORDER BY `updated` ASC LIMIT :maxlines',
                 [
