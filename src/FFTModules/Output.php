@@ -350,7 +350,7 @@ trait Output
         #Get last characters with this achievement
         $data['characters'] = $dbcon->selectAll('SELECT * FROM (SELECT \'character\' AS `type`, `'.$this->dbprefix.'character`.`characterid` AS `id`, `'.$this->dbprefix.'character`.`name`, `'.$this->dbprefix.'character`.`avatar` AS `icon` FROM `'.$this->dbprefix.'character_achievement` LEFT JOIN `'.$this->dbprefix.'character` ON `'.$this->dbprefix.'character`.`characterid` = `'.$this->dbprefix.'character_achievement`.`characterid` WHERE `'.$this->dbprefix.'character_achievement`.`achievementid` = :id ORDER BY `'.$this->dbprefix.'character_achievement`.`time` DESC LIMIT '.$this->maxlines.') t ORDER BY `name`', [':id'=>$id]);
         #Register for an update if old enough or category or howto or dbid are empty
-        if (empty($data['category']) || empty($data['subcategory']) || empty($data['howto']) || empty($data['dbid']) || (time() - strtotime($data['updated'])) >= 31536000) {
+        if ((empty($data['category']) || empty($data['subcategory']) || empty($data['howto']) || empty($data['dbid']) || (time() - strtotime($data['updated'])) >= 31536000) && !empty($data['characters'])) {
             (new \Simbiat\Cron)->add('ffentityupdate', ['achievement', $id, array_column($data['characters'], 'id')[0]], priority: 2, message: 'Updating achievement with ID '.$id);
         }
         unset($dbcon);
