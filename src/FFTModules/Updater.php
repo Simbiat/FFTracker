@@ -54,22 +54,24 @@ trait Updater
                 ],
             ];
             #Add levels
-            foreach ($data['jobs'] as $job=>$level) {
-                #Insert job (we lose performance a tiny bit, but this allows to automatically add new jobs and avoid failures on next step)
-                $query[] = [
-                    'INSERT IGNORE INTO `'.$this->dbprefix.'job` (`name`) VALUES (:job);',
-                    [
-                        ':job' => [$job, 'string'],
-                    ]
-                ];
-                #Insert actual level
-                $query[] = [
-                    'INSERT INTO `'.$this->dbprefix.'character_jobs`(`characterid`, `jobid`, `level`) VALUES (:characterid, (SELECT `jobid` FROM `'.$this->dbprefix.'job` WHERE `name`=:job) AS `jobid`, :level) ON DUPLICATE KEY UPDATE `level`=:level;',
-                    [
-                        ':job' => [$job, 'string'],
-                        ':level' => [(empty($level) ? 0 : intval($level)), 'int'],
-                    ],
-                ];
+            if (!empty($data['jobs'])) {
+                foreach ($data['jobs'] as $job=>$level) {
+                    #Insert job (we lose performance a tiny bit, but this allows to automatically add new jobs and avoid failures on next step)
+                    $query[] = [
+                        'INSERT IGNORE INTO `'.$this->dbprefix.'job` (`name`) VALUES (:job);',
+                        [
+                            ':job' => [$job, 'string'],
+                        ]
+                    ];
+                    #Insert actual level
+                    $query[] = [
+                        'INSERT INTO `'.$this->dbprefix.'character_jobs`(`characterid`, `jobid`, `level`) VALUES (:characterid, (SELECT `jobid` FROM `'.$this->dbprefix.'job` WHERE `name`=:job) AS `jobid`, :level) ON DUPLICATE KEY UPDATE `level`=:level;',
+                        [
+                            ':job' => [$job, 'string'],
+                            ':level' => [(empty($level) ? 0 : intval($level)), 'int'],
+                        ],
+                    ];
+                }
             }
             #Insert server, if it has not been inserted yet
             $queries[] = [

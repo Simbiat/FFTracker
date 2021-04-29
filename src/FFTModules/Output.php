@@ -378,33 +378,33 @@ trait Output
             $result['entities'] = $this->GetRandomEntities($this->maxlines);
         } else {
             #Prepare data for binding. Since we may be using data from user/URI we also try to sanitise it through rawurldecode
-            $where_pdo = array(':id'=>[(is_int($what) ? intval($what) : $what), (is_int($what) ? 'int' : 'string')], ':name'=>rawurldecode($what).'*');
+            $where_pdo = array(':id'=>[(is_int($what) ? intval($what) : $what), (is_int($what) ? 'int' : 'string')], ':name'=>'*'.rawurldecode($what).'*');
             #Count entities
             $result['counts'] = $dbcon->selectPair('
-                        SELECT \'characters\' AS `type`, COUNT(*) AS `count` FROM `'.$this->dbprefix.'character` WHERE `characterid` = :id OR MATCH (`name`) AGAINST (:name IN BOOLEAN MODE)
+                        SELECT \'characters\' AS `type`, COUNT(*) AS `count` FROM `'.$this->dbprefix.'character` WHERE `characterid` = :id OR MATCH (`name`, `biography`) AGAINST (:name IN BOOLEAN MODE)
                         UNION ALL
-                        SELECT \'companies\' AS `type`, COUNT(*) AS `count` FROM `'.$this->dbprefix.'freecompany` WHERE `freecompanyid` = :id OR MATCH (`name`) AGAINST (:name IN BOOLEAN MODE)
+                        SELECT \'companies\' AS `type`, COUNT(*) AS `count` FROM `'.$this->dbprefix.'freecompany` WHERE `freecompanyid` = :id OR MATCH (`name`, `tag`, `slogan`, `estate_zone`, `estate_message`) AGAINST (:name IN BOOLEAN MODE)
                         UNION ALL
                         SELECT \'linkshells\' AS `type`, COUNT(*) AS `count` FROM `'.$this->dbprefix.'linkshell` WHERE `linkshellid` = :id OR MATCH (`name`) AGAINST (:name IN BOOLEAN MODE)
                         UNION ALL
                         SELECT \'pvpteams\' AS `type`, COUNT(*) AS `count` FROM `'.$this->dbprefix.'pvpteam` WHERE `pvpteamid` = :id OR MATCH (`name`) AGAINST (:name IN BOOLEAN MODE)
                         UNION ALL
-                        SELECT \'achievements\' AS `type`, COUNT(*) AS `count` FROM `'.$this->dbprefix.'achievement` WHERE `achievementid` = :name OR MATCH (`name`) AGAINST (:name IN BOOLEAN MODE) OR MATCH (`howto`) AGAINST (:name IN BOOLEAN MODE)
+                        SELECT \'achievements\' AS `type`, COUNT(*) AS `count` FROM `'.$this->dbprefix.'achievement` WHERE `achievementid` = :name OR MATCH (`name`, `howto`) AGAINST (:name IN BOOLEAN MODE)
             ', $where_pdo);
             #If there are actual entities matching the criteria - show $maxlines amount of them
             if (array_sum($result['counts']) > 0) {
                 #Need to use a secondary SELECT, because IN BOOLEAN MODE does not sort by default and we need `relevance` column for that, but we do not want to send to client
                 $result['entities'] = $dbcon->selectAll('
                         SELECT `id`, `type`, `name`, `icon` FROM (
-                            SELECT `characterid` AS `id`, \'character\' as `type`, `name`, `avatar` AS `icon`, IF(`characterid` = :id, 99999, MATCH (`name`) AGAINST (:name IN BOOLEAN MODE)) AS `relevance` FROM `'.$this->dbprefix.'character` WHERE `characterid` = :id OR MATCH (`name`) AGAINST (:name IN BOOLEAN MODE)
+                            SELECT `characterid` AS `id`, \'character\' as `type`, `name`, `avatar` AS `icon`, IF(`characterid` = :id, 99999, MATCH (`name`, `biography`) AGAINST (:name IN BOOLEAN MODE)) AS `relevance` FROM `'.$this->dbprefix.'character` WHERE `characterid` = :id OR MATCH (`name`, `biography`) AGAINST (:name IN BOOLEAN MODE)
                             UNION ALL
-                            SELECT `freecompanyid` AS `id`, \'freecompany\' as `type`, `name`, `crest` AS `icon`, IF(`freecompanyid` = :id, 99998, MATCH (`name`) AGAINST (:name IN BOOLEAN MODE)) AS `relevance` FROM `'.$this->dbprefix.'freecompany` WHERE `freecompanyid` = :id OR MATCH (`name`) AGAINST (:name IN BOOLEAN MODE)
+                            SELECT `freecompanyid` AS `id`, \'freecompany\' as `type`, `name`, `crest` AS `icon`, IF(`freecompanyid` = :id, 99999, MATCH (`name`, `tag`, `slogan`, `estate_zone`, `estate_message`) AGAINST (:name IN BOOLEAN MODE)) AS `relevance` FROM `'.$this->dbprefix.'freecompany` WHERE `freecompanyid` = :id OR MATCH (`name`, `tag`, `slogan`, `estate_zone`, `estate_message`) AGAINST (:name IN BOOLEAN MODE)
                             UNION ALL
-                            SELECT `linkshellid` AS `id`, IF(`crossworld`=1, \'crossworld_linkshell\', \'linkshell\') as `type`, `name`, NULL AS `icon`, IF(`linkshellid` = :id, 99997, MATCH (`name`) AGAINST (:name IN BOOLEAN MODE)) AS `relevance` FROM `'.$this->dbprefix.'linkshell` WHERE `linkshellid` = :id OR MATCH (`name`) AGAINST (:name IN BOOLEAN MODE)
+                            SELECT `linkshellid` AS `id`, IF(`crossworld`=1, \'crossworld_linkshell\', \'linkshell\') as `type`, `name`, NULL AS `icon`, IF(`linkshellid` = :id, 99999, MATCH (`name`) AGAINST (:name IN BOOLEAN MODE)) AS `relevance` FROM `'.$this->dbprefix.'linkshell` WHERE `linkshellid` = :id OR MATCH (`name`) AGAINST (:name IN BOOLEAN MODE)
                             UNION ALL
-                            SELECT `pvpteamid` AS `id`, \'pvpteam\' as `type`, `name`, `crest` AS `icon`, IF(`pvpteamid` = :id, 99996, MATCH (`name`) AGAINST (:name IN BOOLEAN MODE)) AS `relevance` FROM `'.$this->dbprefix.'pvpteam` WHERE `pvpteamid` = :id OR MATCH (`name`) AGAINST (:name IN BOOLEAN MODE)
+                            SELECT `pvpteamid` AS `id`, \'pvpteam\' as `type`, `name`, `crest` AS `icon`, IF(`pvpteamid` = :id, 99999, MATCH (`name`) AGAINST (:name IN BOOLEAN MODE)) AS `relevance` FROM `'.$this->dbprefix.'pvpteam` WHERE `pvpteamid` = :id OR MATCH (`name`) AGAINST (:name IN BOOLEAN MODE)
                             UNION ALL
-                            SELECT `achievementid` AS `id`, \'achievement\' as `type`, `name`, `icon`, IF(`achievementid` = :id, 99995, MATCH (`name`) AGAINST (:name IN BOOLEAN MODE)) AS `relevance` FROM `'.$this->dbprefix.'achievement` WHERE `achievementid` = :id OR MATCH (`name`) AGAINST (:name IN BOOLEAN MODE) OR MATCH (`howto`) AGAINST (:name IN BOOLEAN MODE)
+                            SELECT `achievementid` AS `id`, \'achievement\' as `type`, `name`, `icon`, IF(`achievementid` = :id, 99999, MATCH (`name`, `howto`) AGAINST (:name IN BOOLEAN MODE)) AS `relevance` FROM `'.$this->dbprefix.'achievement` WHERE `achievementid` = :id OR MATCH (`name`, `howto`) AGAINST (:name IN BOOLEAN MODE)
                             ORDER BY `relevance` DESC, `name` ASC LIMIT '.$this->maxlines.'
                         ) tempdata
                 ', $where_pdo);
