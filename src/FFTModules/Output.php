@@ -237,7 +237,7 @@ trait Output
         $avatar = match($type) {
             'character' => '`avatar`',
             'achievement' => '`icon`',
-            'freecompany', 'pvpteam' => 'crest',
+            'freecompany', 'pvpteam' => '`crest`',
             default => 'NULL',
         };
         #Sanitize numbers
