@@ -248,7 +248,8 @@ trait Output
             $limit = 1;
         }
         $dbcon = (new \Simbiat\Database\Controller);
-        $result['entities'] = $dbcon->selectAll('SELECT `'.$type.'id` AS `id`, \''.$type.'\' as `type`, `name`, '.$avatar.' AS `icon`, `updated` FROM `'.$this->dbprefix.$type.'` ORDER BY `name` ASC LIMIT '.$offset.', '.$limit);
+        #Forcing index, because for some reason MySQL is using filesort for this query
+        $result['entities'] = $dbcon->selectAll('SELECT `'.$type.'id` AS `id`, \''.$type.'\' as `type`, `name`, '.$avatar.' AS `icon`, `updated` FROM `'.$this->dbprefix.$type.'` FORCE INDEX(`name_order`) ORDER BY `name` ASC LIMIT '.$offset.', '.$limit);
         $result['statistics'] = $dbcon->selectRow('SELECT COUNT(`'.$type.'id`) AS `count`, MAX(`updated`) AS `updated` FROM `'.$this->dbprefix.$type.'`');
         return $result;
     }
