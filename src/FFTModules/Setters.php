@@ -10,7 +10,7 @@ trait Setters
     protected string $language = 'na';
     protected string $dbprefix = 'ff__';
     protected int $maxage = 90;
-    protected int $maxlines = 50;
+    public int $maxlines = 50;
     protected string $crestpath = '';
     
     #############
