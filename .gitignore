@@ -1,2 +1,12 @@
 
 src/ffstatitics.json
+src/statistics/achievements.json
+src/statistics/astrology.json
+src/statistics/characters.json
+src/statistics/cities.json
+src/statistics/freecompanies.json
+src/statistics/genetics.json
+src/statistics/grandcompanies.json
+src/statistics/other.json
+src/statistics/servers.json
+src/statistics/timelines.json

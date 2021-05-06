@@ -258,12 +258,16 @@ trait Output
     {
         #Sanitize type
         $type = strtolower($type);
-        if (!in_array($type, ['genetics', 'astrology', 'characters', 'freecompanies', 'cities', 'grandcompanies', 'servers', 'achievements', 'timelines', 'other'])) {
+        if (!in_array($type, ['genetics', 'astrology', 'characters', 'freecompanies', 'cities', 'grandcompanies', 'servers', 'achievements', 'timelines', 'other', 'bugs'])) {
             $type = 'genetics';
         }
         #Sanitize cachepath
         if (empty($cachepath)) {
-            $cachepath = dirname(__DIR__).'/ffstatitics.json';
+            #Create path if missing
+            if (!is_dir(dirname(__DIR__).'/statistics/')) {
+                mkdir(dirname(__DIR__).'/statistics/');
+            }
+            $cachepath = dirname(__DIR__).'/statistics/'.$type.'.json';
         }
         #Check if cache file exists
         if (is_file($cachepath)) {
@@ -358,43 +362,43 @@ trait Output
                 if (!$nocache && !empty($json['characters']['changes']['name'])) {
                     $data['characters']['changes']['name'] = $json['characters']['changes']['name'];
                 } else {
-                    $data['characters']['changes']['name'] = $dbcon->countUnique($this->dbprefix.'character_names', 'characterid', '', $this->dbprefix.'character', 'INNER', 'characterid', '`tempresult`.`characterid` AS `id`, `'.$this->dbprefix.'character`.`avatar`, `'.$this->dbprefix.'character`.`name`', 'DESC', 20, [], true);
+                    $data['characters']['changes']['name'] = $this->valueToName($dbcon->countUnique($this->dbprefix.'character_names', 'characterid', '', $this->dbprefix.'character', 'INNER', 'characterid', '`tempresult`.`characterid` AS `id`, `'.$this->dbprefix.'character`.`avatar` AS `icon`, \'character\' AS `type`, `'.$this->dbprefix.'character`.`name`', 'DESC', 20, [], true));
                 }
                 #Most reincarnation
                 if (!$nocache && !empty($json['characters']['changes']['clan'])) {
                     $data['characters']['changes']['clan'] = $json['characters']['changes']['clan'];
                 } else {
-                    $data['characters']['changes']['clan'] = $dbcon->countUnique($this->dbprefix.'character_clans', 'characterid', '', $this->dbprefix.'character', 'INNER', 'characterid', '`tempresult`.`characterid` AS `id`, `'.$this->dbprefix.'character`.`avatar`, `'.$this->dbprefix.'character`.`name`', 'DESC', 20, [], true);
+                    $data['characters']['changes']['clan'] = $this->valueToName($dbcon->countUnique($this->dbprefix.'character_clans', 'characterid', '', $this->dbprefix.'character', 'INNER', 'characterid', '`tempresult`.`characterid` AS `id`, `'.$this->dbprefix.'character`.`avatar` AS `icon`, \'character\' AS `type`, `'.$this->dbprefix.'character`.`name`', 'DESC', 20, [], true));
                 }
                 #Most servers
                 if (!$nocache && !empty($json['characters']['changes']['server'])) {
                     $data['characters']['changes']['server'] = $json['characters']['changes']['server'];
                 } else {
-                    $data['characters']['changes']['server'] = $dbcon->countUnique($this->dbprefix.'character_servers', 'characterid', '', $this->dbprefix.'character', 'INNER', 'characterid', '`tempresult`.`characterid` AS `id`, `'.$this->dbprefix.'character`.`avatar`, `'.$this->dbprefix.'character`.`name`', 'DESC', 20, [], true);
+                    $data['characters']['changes']['server'] = $this->valueToName($dbcon->countUnique($this->dbprefix.'character_servers', 'characterid', '', $this->dbprefix.'character', 'INNER', 'characterid', '`tempresult`.`characterid` AS `id`, `'.$this->dbprefix.'character`.`avatar` AS `icon`, \'character\' AS `type`, `'.$this->dbprefix.'character`.`name`', 'DESC', 20, [], true));
                 }
                 #Most companies
                 if (!$nocache && !empty($json['characters']['xgroups']['Free Companies'])) {
                     $data['characters']['xgroups']['Free Companies'] = $json['characters']['xgroups']['Free Companies'];
                 } else {
-                    $data['characters']['xgroups']['Free Companies'] = $dbcon->countUnique($this->dbprefix.'freecompany_x_character', 'characterid', '', $this->dbprefix.'character', 'INNER', 'characterid', '`tempresult`.`characterid` AS `id`, `'.$this->dbprefix.'character`.`avatar`, `'.$this->dbprefix.'character`.`name`', 'DESC', 20, [], true);
+                    $data['characters']['xgroups']['Free Companies'] = $this->valueToName($dbcon->countUnique($this->dbprefix.'freecompany_x_character', 'characterid', '', $this->dbprefix.'character', 'INNER', 'characterid', '`tempresult`.`characterid` AS `id`, `'.$this->dbprefix.'character`.`avatar` AS `icon`, \'character\' AS `type`, `'.$this->dbprefix.'character`.`name`', 'DESC', 20, [], true));
                 }
                 #Most PvP teams
                 if (!$nocache && !empty($json['characters']['xgroups']['PvP Teams'])) {
                     $data['characters']['xgroups']['PvP Teams'] = $json['characters']['xgroups']['PvP Teams'];
                 } else {
-                    $data['characters']['xgroups']['PvP Teams'] = $dbcon->countUnique($this->dbprefix.'pvpteam_x_character', 'characterid', '', $this->dbprefix.'character', 'INNER', 'characterid', '`tempresult`.`characterid` AS `id`, `'.$this->dbprefix.'character`.`avatar`, `'.$this->dbprefix.'character`.`name`', 'DESC', 20, [], true);
+                    $data['characters']['xgroups']['PvP Teams'] = $this->valueToName($dbcon->countUnique($this->dbprefix.'pvpteam_x_character', 'characterid', '', $this->dbprefix.'character', 'INNER', 'characterid', '`tempresult`.`characterid` AS `id`, `'.$this->dbprefix.'character`.`avatar` AS `icon`, \'character\' AS `type`, `'.$this->dbprefix.'character`.`name`', 'DESC', 20, [], true));
                 }
                 #Most x-linkshells
                 if (!$nocache && !empty($json['characters']['xgroups']['Linkshells'])) {
                     $data['characters']['xgroups']['Linkshells'] = $json['characters']['xgroups']['Linkshells'];
                 } else {
-                    $data['characters']['xgroups']['Linkshells'] = $dbcon->countUnique($this->dbprefix.'linkshell_x_character', 'characterid', '', $this->dbprefix.'character', 'INNER', 'characterid', '`tempresult`.`characterid` AS `id`, `'.$this->dbprefix.'character`.`avatar`, `'.$this->dbprefix.'character`.`name`', 'DESC', 20, [], true);
+                    $data['characters']['xgroups']['Linkshells'] = $this->valueToName($dbcon->countUnique($this->dbprefix.'linkshell_x_character', 'characterid', '', $this->dbprefix.'character', 'INNER', 'characterid', '`tempresult`.`characterid` AS `id`, `'.$this->dbprefix.'character`.`avatar` AS `icon`, \'character\' AS `type`, `'.$this->dbprefix.'character`.`name`', 'DESC', 20, [], true));
                 }
                 #Most linkshells
                 if (!$nocache && !empty($json['characters']['groups']['linkshell'])) {
                     $data['characters']['groups']['linkshell'] = $json['characters']['groups']['linkshell'];
                 } else {
-                    $data['characters']['groups']['linkshell'] = $dbcon->countUnique($this->dbprefix.'linkshell_character', 'characterid', '', $this->dbprefix.'character', 'INNER', 'characterid', '`tempresult`.`characterid` AS `id`, `'.$this->dbprefix.'character`.`avatar`, `'.$this->dbprefix.'character`.`name`', 'DESC', 20, [], true);
+                    $data['characters']['groups']['linkshell'] = $this->valueToName($dbcon->countUnique($this->dbprefix.'linkshell_character', 'characterid', '', $this->dbprefix.'character', 'INNER', 'characterid', '`tempresult`.`characterid` AS `id`, `'.$this->dbprefix.'character`.`avatar` AS `icon`, \'character\' AS `type`, `'.$this->dbprefix.'character`.`name`', 'DESC', 20, [], true));
                 }
                 #Groups affiliation
                 if (!$nocache && !empty($json['characters']['groups']['participation'])) {
@@ -429,7 +433,7 @@ trait Output
                 if (!$nocache && !empty($json['characters']['most_pvp'])) {
                     $data['characters']['most_pvp'] = $json['characters']['most_pvp'];
                 } else {
-                    $data['characters']['most_pvp'] = $dbcon->SelectAll('SELECT `'.$this->dbprefix.'character`.`characterid` AS `id`, `'.$this->dbprefix.'character`.`avatar`, `'.$this->dbprefix.'character`.`name` AS `value`, `matches` AS `count` FROM `'.$this->dbprefix.'pvpteam_character` INNER JOIN `'.$this->dbprefix.'character` ON `'.$this->dbprefix.'pvpteam_character`.`characterid`=`'.$this->dbprefix.'character`.`characterid` ORDER BY `'.$this->dbprefix.'pvpteam_character`.`matches` DESC LIMIT 20');
+                    $data['characters']['most_pvp'] = $dbcon->SelectAll('SELECT `'.$this->dbprefix.'character`.`characterid` AS `id`, `'.$this->dbprefix.'character`.`avatar` AS `icon`, \'character\' AS `type`, `'.$this->dbprefix.'character`.`name`, `matches` AS `count` FROM `'.$this->dbprefix.'pvpteam_character` INNER JOIN `'.$this->dbprefix.'character` ON `'.$this->dbprefix.'pvpteam_character`.`characterid`=`'.$this->dbprefix.'character`.`characterid` ORDER BY `'.$this->dbprefix.'pvpteam_character`.`matches` DESC LIMIT 20');
                 }
                 break;
             case 'freecompanies':
@@ -455,7 +459,7 @@ trait Output
                 if (!$nocache && !empty($json['freecompany']['ranking']['monthly'])) {
                     $data['freecompany']['ranking']['monthly'] = $json['freecompany']['ranking']['monthly'];
                 } else {
-                    $data['freecompany']['ranking']['monthly'] = $dbcon->SelectAll('SELECT `tempresult`.*, `'.$this->dbprefix.'freecompany`.`name` FROM (SELECT `main`.`freecompanyid`, 1/(`members`*`monthly`)*100 AS `ratio` FROM `'.$this->dbprefix.'freecompany_ranking` `main` WHERE `main`.`date` = (SELECT MAX(`sub`.`date`) FROM `'.$this->dbprefix.'freecompany_ranking` `sub`)) `tempresult` INNER JOIN `'.$this->dbprefix.'freecompany` ON `'.$this->dbprefix.'freecompany`.`freecompanyid` = `tempresult`.`freecompanyid` ORDER BY `ratio` DESC');
+                    $data['freecompany']['ranking']['monthly'] = $dbcon->SelectAll('SELECT `tempresult`.*, `'.$this->dbprefix.'freecompany`.`name`, `'.$this->dbprefix.'freecompany`.`crest` AS `icon`, \'freecompany\' AS `type` FROM (SELECT `main`.`freecompanyid` AS `id`, 1/(`members`*`monthly`)*100 AS `ratio` FROM `'.$this->dbprefix.'freecompany_ranking` `main` WHERE `main`.`date` = (SELECT MAX(`sub`.`date`) FROM `'.$this->dbprefix.'freecompany_ranking` `sub`)) `tempresult` INNER JOIN `'.$this->dbprefix.'freecompany` ON `'.$this->dbprefix.'freecompany`.`freecompanyid` = `tempresult`.`id` ORDER BY `ratio` DESC');
                     if (count($data['freecompany']['ranking']['monthly']) > 1) {
                         $data['freecompany']['ranking']['monthly'] = $ArrayHelpers->topAndBottom($data['freecompany']['ranking']['monthly'], 20);
                     } else {
@@ -466,7 +470,7 @@ trait Output
                 if (!$nocache && !empty($json['freecompany']['ranking']['weekly'])) {
                     $data['freecompany']['ranking']['weekly'] = $json['freecompany']['ranking']['weekly'];
                 } else {
-                    $data['freecompany']['ranking']['weekly'] = $dbcon->SelectAll('SELECT `tempresult`.*, `'.$this->dbprefix.'freecompany`.`name` FROM (SELECT `main`.`freecompanyid`, 1/(`members`*`weekly`)*100 AS `ratio` FROM `'.$this->dbprefix.'freecompany_ranking` `main` WHERE `main`.`date` = (SELECT MAX(`sub`.`date`) FROM `'.$this->dbprefix.'freecompany_ranking` `sub`)) `tempresult` INNER JOIN `'.$this->dbprefix.'freecompany` ON `'.$this->dbprefix.'freecompany`.`freecompanyid` = `tempresult`.`freecompanyid` ORDER BY `ratio` DESC');
+                    $data['freecompany']['ranking']['weekly'] = $dbcon->SelectAll('SELECT `tempresult`.*, `'.$this->dbprefix.'freecompany`.`name`, `'.$this->dbprefix.'freecompany`.`crest` AS `icon`, \'freecompany\' AS `type` FROM (SELECT `main`.`freecompanyid` AS `id`, 1/(`members`*`weekly`)*100 AS `ratio` FROM `'.$this->dbprefix.'freecompany_ranking` `main` WHERE `main`.`date` = (SELECT MAX(`sub`.`date`) FROM `'.$this->dbprefix.'freecompany_ranking` `sub`)) `tempresult` INNER JOIN `'.$this->dbprefix.'freecompany` ON `'.$this->dbprefix.'freecompany`.`freecompanyid` = `tempresult`.`id` ORDER BY `ratio` DESC');
                     if (count($data['freecompany']['ranking']['weekly']) > 1) {
                         $data['freecompany']['ranking']['weekly'] = $ArrayHelpers->topAndBottom($data['freecompany']['ranking']['weekly'], 20);
                     } else {
@@ -596,7 +600,7 @@ trait Output
                 if (!$nocache && !empty($json['other']['achievements'])) {
                     $data['other']['achievements'] = $json['other']['achievements'];
                 } else {
-                    $data['other']['achievements'] = $dbcon->SelectAll('SELECT `'.$this->dbprefix.'achievement`.`category`, `'.$this->dbprefix.'achievement`.`achievementid` AS `id`, `'.$this->dbprefix.'achievement`.`icon`, `'.$this->dbprefix.'achievement`.`name` AS `value`, `count` FROM (SELECT `'.$this->dbprefix.'character_achievement`.`achievementid`, count(`'.$this->dbprefix.'character_achievement`.`achievementid`) AS `count` from `'.$this->dbprefix.'character_achievement` GROUP BY `'.$this->dbprefix.'character_achievement`.`achievementid` ORDER BY `count` ASC) `tempresult` INNER JOIN `'.$this->dbprefix.'achievement` ON `tempresult`.`achievementid`=`'.$this->dbprefix.'achievement`.`achievementid` WHERE `'.$this->dbprefix.'achievement`.`category` IS NOT NULL ORDER BY `count` ASC');
+                    $data['other']['achievements'] = $dbcon->SelectAll('SELECT \'achievement\' as `type`, `'.$this->dbprefix.'achievement`.`category`, `'.$this->dbprefix.'achievement`.`achievementid` AS `id`, `'.$this->dbprefix.'achievement`.`icon`, `'.$this->dbprefix.'achievement`.`name` AS `name`, `count` FROM (SELECT `'.$this->dbprefix.'character_achievement`.`achievementid`, count(`'.$this->dbprefix.'character_achievement`.`achievementid`) AS `count` from `'.$this->dbprefix.'character_achievement` GROUP BY `'.$this->dbprefix.'character_achievement`.`achievementid` ORDER BY `count` ASC) `tempresult` INNER JOIN `'.$this->dbprefix.'achievement` ON `tempresult`.`achievementid`=`'.$this->dbprefix.'achievement`.`achievementid` WHERE `'.$this->dbprefix.'achievement`.`category` IS NOT NULL ORDER BY `count` ASC');
                     #Split achievements by categories
                     $data['other']['achievements'] = $ArrayHelpers->splitByKey($data['other']['achievements'], 'category', [], []);
                     #Get only top 20 for each category
@@ -722,6 +726,16 @@ trait Output
         #Attempt to write to cache
         file_put_contents($cachepath, json_encode(array_merge($json, $data), JSON_INVALID_UTF8_SUBSTITUTE | JSON_OBJECT_AS_ARRAY | JSON_THROW_ON_ERROR | JSON_PRESERVE_ZERO_FRACTION | JSON_PRETTY_PRINT));
         return $data;
+    }
+    
+    #Helper function to replace key names of 'value' with 'name' in
+    private function valueToName(array $array): array
+    {
+        foreach($array as $key=>$row) {
+            $array[$key]['name'] = $row['value'];
+            unset($array[$key]['value']);
+        }
+        return $array;
     }
     
     public function GetRandomEntities(int $number): array
