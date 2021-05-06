@@ -54,8 +54,8 @@ trait Output
         );
         #Clean up the data from unnecessary (technical) clutter
         unset($data['clanid'], $data['namedayid'], $data['achievementid'], $data['category'], $data['subcategory'], $data['howto'], $data['points'], $data['icon'], $data['item'], $data['itemicon'], $data['itemid'], $data['serverid']);
-        #In case the entry is old enough (at least 1 day old) and register it for update
-        if (empty($data['deleted']) && (time() - strtotime($data['updated'])) >= 86400) {
+        #In case the entry is old enough (at least 1 day old) and register it for update. Also check that this is not a bot (if \Simbiat\usercontrol is used).
+        if (empty($data['deleted']) && (time() - strtotime($data['updated'])) >= 86400 && empty($_SESSION['UA']['bot'])) {
             (new \Simbiat\Cron)->add('ffentityupdate', ['character', $id], priority: 1, message: 'Updating character with ID '.$id);
         }
         unset($dbcon);
@@ -80,8 +80,8 @@ trait Output
         $data['ranks_history'] = $dbcon->selectAll('SELECT * FROM (SELECT `date`, `weekly`, `monthly`, `members` FROM `'.$this->dbprefix.'freecompany_ranking` WHERE `freecompanyid`=:id ORDER BY `date` DESC LIMIT 100) `lastranks` ORDER BY `date` ASC', [':id'=>$id]);
         #Clean up the data from unnecessary (technical) clutter
         unset($data['grandcompanyid'], $data['estateid'], $data['gcrankid'], $data['gc_rank'], $data['gc_icon'], $data['activeid'], $data['cityid'], $data['left'], $data['top'], $data['cityicon']);
-        #In case the entry is old enough (at least 1 day old) and register it for update
-        if (empty($data['deleted']) && (time() - strtotime($data['updated'])) >= 86400) {
+        #In case the entry is old enough (at least 1 day old) and register it for update. Also check that this is not a bot (if \Simbiat\usercontrol is used).
+        if (empty($data['deleted']) && (time() - strtotime($data['updated'])) >= 86400 && empty($_SESSION['UA']['bot'])) {
             (new \Simbiat\Cron)->add('ffentityupdate', ['freecompany', $id], priority: 1, message: 'Updating free company with ID '.$id);
         }
         unset($dbcon);
@@ -106,8 +106,8 @@ trait Output
         if ($data['crossworld']) {
             unset($data['server']);
         }
-        #In case the entry is old enough (at least 1 day old) and register it for update
-        if (empty($data['deleted']) && (time() - strtotime($data['updated'])) >= 86400) {
+        #In case the entry is old enough (at least 1 day old) and register it for update. Also check that this is not a bot (if \Simbiat\usercontrol is used).
+        if (empty($data['deleted']) && (time() - strtotime($data['updated'])) >= 86400 && empty($_SESSION['UA']['bot'])) {
             if ($data['crossworld'] == '0') {
                 (new \Simbiat\Cron)->add('ffentityupdate', ['linkshell', $id], priority: 1, message: 'Updating linkshell with ID '.$id);
             } else {
@@ -133,8 +133,8 @@ trait Output
         $data['members'] = $dbcon->selectAll('SELECT `'.$this->dbprefix.'pvpteam_character`.`characterid`, `'.$this->dbprefix.'pvpteam_character`.`matches`, `'.$this->dbprefix.'character`.`name`, `'.$this->dbprefix.'character`.`avatar`, `'.$this->dbprefix.'pvpteam_rank`.`rank`, `'.$this->dbprefix.'pvpteam_rank`.`pvprankid` FROM `'.$this->dbprefix.'pvpteam_character` LEFT JOIN `'.$this->dbprefix.'pvpteam_rank` ON `'.$this->dbprefix.'pvpteam_rank`.`pvprankid`=`'.$this->dbprefix.'pvpteam_character`.`rankid` LEFT JOIN `'.$this->dbprefix.'character` ON `'.$this->dbprefix.'pvpteam_character`.`characterid`=`'.$this->dbprefix.'character`.`characterid` WHERE `'.$this->dbprefix.'pvpteam_character`.`pvpteamid`=:id ORDER BY `'.$this->dbprefix.'pvpteam_character`.`rankid` ASC, `'.$this->dbprefix.'character`.`name` ASC', [':id'=>$id]);
         #Clean up the data from unnecessary (technical) clutter
         unset($data['datacenterid'], $data['serverid'], $data['server']);
-        #In case the entry is old enough (at least 1 day old) and register it for update
-        if (empty($data['deleted']) && (time() - strtotime($data['updated'])) >= 86400) {
+        #In case the entry is old enough (at least 1 day old) and register it for update. Also check that this is not a bot (if \Simbiat\usercontrol is used).
+        if (empty($data['deleted']) && (time() - strtotime($data['updated'])) >= 86400 && empty($_SESSION['UA']['bot'])) {
             (new \Simbiat\Cron)->add('ffentityupdate', ['pvpteam', $id], priority: 1, message: 'Updating PvP team with ID '.$id);
         }
         unset($dbcon);
@@ -152,8 +152,8 @@ trait Output
         }
         #Get last characters with this achievement
         $data['characters'] = $dbcon->selectAll('SELECT * FROM (SELECT \'character\' AS `type`, `'.$this->dbprefix.'character`.`characterid` AS `id`, `'.$this->dbprefix.'character`.`name`, `'.$this->dbprefix.'character`.`avatar` AS `icon` FROM `'.$this->dbprefix.'character_achievement` LEFT JOIN `'.$this->dbprefix.'character` ON `'.$this->dbprefix.'character`.`characterid` = `'.$this->dbprefix.'character_achievement`.`characterid` WHERE `'.$this->dbprefix.'character_achievement`.`achievementid` = :id ORDER BY `'.$this->dbprefix.'character_achievement`.`time` DESC LIMIT '.$this->maxlines.') t ORDER BY `name`', [':id'=>$id]);
-        #Register for an update if old enough or category or howto or dbid are empty
-        if ((empty($data['category']) || empty($data['subcategory']) || empty($data['howto']) || empty($data['dbid']) || (time() - strtotime($data['updated'])) >= 31536000) && !empty($data['characters'])) {
+        #Register for an update if old enough or category or howto or dbid are empty. Also check that this is not a bot (if \Simbiat\usercontrol is used).
+        if ((empty($data['category']) || empty($data['subcategory']) || empty($data['howto']) || empty($data['dbid']) || (time() - strtotime($data['updated'])) >= 31536000) && !empty($data['characters']) && empty($_SESSION['UA']['bot'])) {
             (new \Simbiat\Cron)->add('ffentityupdate', ['achievement', $id, array_column($data['characters'], 'id')[0]], priority: 2, message: 'Updating achievement with ID '.$id);
         }
         unset($dbcon);
