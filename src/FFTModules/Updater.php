@@ -90,14 +90,16 @@ trait Updater
                 ],
             ];
             #Insert race, clan and sex combination, if it has not been inserted yet
-            $queries[] = [
-                'INSERT INTO `'.$this->dbprefix.'character_clans`(`characterid`, `genderid`, `clanid`) VALUES (:characterid, :genderid, (SELECT `clanid` FROM `'.$this->dbprefix.'clan` WHERE `clan`=:clan)) ON DUPLICATE KEY UPDATE `clanid`=`clanid`;',
-                [
-                    ':characterid'=>$data['characterid'],
-                    ':genderid'=>($data['gender']==='male' ? '1' : '0'),
-                    ':clan'=>$data['clan'],
-                ],
-            ];
+            if (!empty($data['clan'])) {
+                $queries[] = [
+                    'INSERT INTO `'.$this->dbprefix.'character_clans`(`characterid`, `genderid`, `clanid`) VALUES (:characterid, :genderid, (SELECT `clanid` FROM `'.$this->dbprefix.'clan` WHERE `clan`=:clan)) ON DUPLICATE KEY UPDATE `clanid`=`clanid`;',
+                    [
+                        ':characterid'=>$data['characterid'],
+                        ':genderid'=>($data['gender']==='male' ? '1' : '0'),
+                        ':clan'=>$data['clan'],
+                    ],
+                ];
+            }
             #Check if present in Free Company
             if (empty($data['freeCompany']['id'])) {
                 $queries = array_merge($queries, $this->RemoveFromGroup($data['characterid'], 'freecompany'));
