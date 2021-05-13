@@ -249,7 +249,7 @@ trait Output
         }
         $dbcon = (new \Simbiat\Database\Controller);
         #Forcing index, because for some reason MySQL is using filesort for this query
-        $result['entities'] = $dbcon->selectAll('SELECT `'.$type.'id` AS `id`, \''.$type.'\' as `type`, `name`, '.$avatar.' AS `icon`, `updated` FROM `'.$this->dbprefix.$type.'` FORCE INDEX(`name_order`) ORDER BY `name` ASC LIMIT '.$offset.', '.$limit);
+        $result['entities'] = $dbcon->selectAll('SELECT `'.$type.'id` AS `id`, '.($type === 'linkshell' ? 'IF(`crossworld`=1, \'crossworld_linkshell\', \'linkshell\')' : '\''.$type.'\'').' as `type`, `name`, '.$avatar.' AS `icon`, `updated` FROM `'.$this->dbprefix.$type.'` FORCE INDEX(`name_order`) ORDER BY `name` ASC LIMIT '.$offset.', '.$limit);
         $result['statistics'] = $dbcon->selectRow('SELECT COUNT(`'.$type.'id`) AS `count`, MAX(`updated`) AS `updated` FROM `'.$this->dbprefix.$type.'`');
         return $result;
     }
@@ -678,11 +678,11 @@ trait Output
                     $data['bugs']['nomembers'] = $json['bugs']['nomembers'];
                 } else {
                     $data['bugs']['nomembers'] = $dbcon->SelectAll(
-                        'SELECT `freecompanyid` AS `id`, `name`, \'freecompany\' AS `type` FROM `ff__freecompany` WHERE `deleted` IS NULL AND `freecompanyid` NOT IN (SELECT `freecompanyid` FROM `ff__freecompany_character`)
+                        'SELECT `freecompanyid` AS `id`, `name`, \'freecompany\' AS `type` FROM `'.$this->dbprefix.'freecompany` WHERE `deleted` IS NULL AND `freecompanyid` NOT IN (SELECT `freecompanyid` FROM `'.$this->dbprefix.'freecompany_character`)
                         UNION
-                        SELECT `linkshellid` AS `id`, `name`, IF(`crossworld`=1, \'crossworld_linkshell\', \'linkshell\') AS `type` FROM `ff__linkshell` WHERE `deleted` IS NULL AND `linkshellid` NOT IN (SELECT `linkshellid` FROM `ff__linkshell_character`)
+                        SELECT `linkshellid` AS `id`, `name`, IF(`crossworld`=1, \'crossworld_linkshell\', \'linkshell\') AS `type` FROM `'.$this->dbprefix.'linkshell` WHERE `deleted` IS NULL AND `linkshellid` NOT IN (SELECT `linkshellid` FROM `'.$this->dbprefix.'linkshell_character`)
                         UNION
-                        SELECT `pvpteamid` AS `id`, `name`, \'pvpteam\' AS `type` FROM `ff__pvpteam` WHERE `deleted` IS NULL AND `pvpteamid` NOT IN (SELECT `pvpteamid` FROM `ff__pvpteam_character`)
+                        SELECT `pvpteamid` AS `id`, `name`, \'pvpteam\' AS `type` FROM `'.$this->dbprefix.'pvpteam` WHERE `deleted` IS NULL AND `pvpteamid` NOT IN (SELECT `pvpteamid` FROM `'.$this->dbprefix.'pvpteam_character`)
                         ORDER BY `name` ASC;'
                     );
                 }
@@ -759,6 +759,7 @@ trait Output
         return $array;
     }
     
+    #Function to show X random entities
     public function GetRandomEntities(int $number): array
     {
         return (new \Simbiat\Database\Controller)->selectAll('
@@ -766,13 +767,31 @@ trait Output
                 UNION ALL
                 (SELECT `freecompanyid` AS `id`, \'freecompany\' as `type`, `name`, `crest` AS `icon`, 0 AS `crossworld` FROM `'.$this->dbprefix.'freecompany` WHERE `freecompanyid` IN (SELECT `freecompanyid` FROM `'.$this->dbprefix.'freecompany` WHERE `deleted` IS NULL ORDER BY RAND()) LIMIT '.$number.')
                 UNION ALL
-                (SELECT `linkshellid` AS `id`, \'linkshell\' as `type`, `name`, NULL AS `icon`, `crossworld` FROM `'.$this->dbprefix.'linkshell` WHERE `linkshellid` IN (SELECT `linkshellid` FROM `'.$this->dbprefix.'linkshell` WHERE `deleted` IS NULL ORDER BY RAND()) LIMIT '.$number.')
+                (SELECT `linkshellid` AS `id`, IF(`crossworld`=1, \'crossworld_linkshell\', \'linkshell\') as `type`, `name`, NULL AS `icon`, `crossworld` FROM `'.$this->dbprefix.'linkshell` WHERE `linkshellid` IN (SELECT `linkshellid` FROM `'.$this->dbprefix.'linkshell` WHERE `deleted` IS NULL ORDER BY RAND()) LIMIT '.$number.')
                 UNION ALL
                 (SELECT `pvpteamid` AS `id`, \'pvpteam\' as `type`, `name`, `crest` AS `icon`, 1 AS `crossworld` FROM `'.$this->dbprefix.'pvpteam`WHERE `pvpteamid` IN (SELECT `pvpteamid` FROM `'.$this->dbprefix.'pvpteam` WHERE `deleted` IS NULL ORDER BY RAND()) LIMIT '.$number.')
                 UNION ALL
                 (SELECT `achievementid` AS `id`, \'achievement\' as `type`, `name`, `icon`, 1 AS `crossworld` FROM `'.$this->dbprefix.'achievement` WHERE `achievementid` IN (SELECT `achievementid` FROM `'.$this->dbprefix.'achievement` ORDER BY RAND()) LIMIT '.$number.')
                 ORDER BY RAND() LIMIT '.$number.'
         ');
+    }
+    
+    #Function to show X fresh entities
+    public function GetLAstEntities(int $number): array
+    {
+        return (new \Simbiat\Database\Controller)->selectAll(
+            'SELECT * FROM (SELECT `characterid` as `id`, \'character\' as `type`, `name`, `avatar` AS `icon`, 0 AS `crossworld`, `updated` FROM `'.$this->dbprefix.'character` WHERE `deleted` IS NULL ORDER BY `updated` LIMIT '.$number.') AS `characters`
+            UNION ALL
+            SELECT * FROM (SELECT `freecompanyid` as `id`, \'freecompany\' as `type`, `name`, `crest` AS `icon`, 0 AS `crossworld`, `updated` FROM `'.$this->dbprefix.'freecompany` WHERE `deleted` IS NULL ORDER BY `updated` LIMIT '.$number.') AS `companies`
+            UNION ALL
+            SELECT * FROM (SELECT `linkshellid` as `id`, IF(`crossworld`=1, \'crossworld_linkshell\', \'linkshell\') as `type`, `name`, NULL AS `icon`, `crossworld`, `updated` FROM `'.$this->dbprefix.'linkshell` WHERE `deleted` IS NULL ORDER BY `updated` LIMIT '.$number.') AS `linkshells`
+            UNION ALL
+            SELECT * FROM (SELECT `pvpteamid` as `id`, \'pvpteam\' as `type`, `name`, `crest` AS `icon`, 0 AS `crossworld`, `updated` FROM `'.$this->dbprefix.'pvpteam` WHERE `deleted` IS NULL ORDER BY `updated` LIMIT '.$number.') AS `pvp`
+            UNION ALL
+            SELECT * FROM (SELECT `achievementid` as `id`, \'achievement\' as `type`, `name`, `icon`, 0 AS `crossworld`, `updated` FROM `'.$this->dbprefix.'achievement` ORDER BY `updated` LIMIT '.$number.') AS `achievements`
+            ORDER BY `updated` LIMIT '.$number.'
+            ;'
+        );
     }
 }
 ?>
