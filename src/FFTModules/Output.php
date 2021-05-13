@@ -777,7 +777,7 @@ trait Output
     }
     
     #Function to show X fresh entities
-    public function GetLAstEntities(int $number): array
+    public function GetLastEntities(int $number): array
     {
         return (new \Simbiat\Database\Controller)->selectAll(
             'SELECT * FROM (SELECT `characterid` as `id`, \'character\' as `type`, `name`, `avatar` AS `icon`, 0 AS `crossworld`, `updated` FROM `'.$this->dbprefix.'character` WHERE `deleted` IS NULL ORDER BY `updated` LIMIT '.$number.') AS `characters`
