@@ -16,10 +16,10 @@
     "require": {
         "php": "^8",
         "ext-gd": "*",
-        "simbiat/lodestone-parser": "^1.0.0+20210311",
-        "simbiat/database": "^2.0.0+20210311",
-        "simbiat/arrayhelpers": "^2.0.0+20210310",
-        "simbiat/http20": "^1.0.0+20210314",
+        "simbiat/lodestone-parser": "^1",
+        "simbiat/database": "^2",
+        "simbiat/arrayhelpers": "^2",
+        "simbiat/http20": "^1",
         "simbiat/cron": "*"
     },
     "autoload": {
