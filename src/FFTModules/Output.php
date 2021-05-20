@@ -3,7 +3,7 @@ declare(strict_types=1);
 namespace Simbiat\FFTModules;
 
 trait Output
-{    
+{
     #Generalized function to get entity data
     public function TrackerGrab(string $type, string $id): array
     {
@@ -16,7 +16,7 @@ trait Output
             default => [],
         };
     }
-    
+
     private function GetCharacter(string $id): array
     {
         $dbcon = (new \Simbiat\Database\Controller);
@@ -27,7 +27,7 @@ trait Output
             return [];
         }
         #Get old names. For now this is commented out due to cases of bullying, when the old names are learnt. They are still being collected, though for statistical purposes.
-        #$data['oldnames'] = $dbcon->selectColumn('SELECT `name` FROM `'.$this->dbprefix.'character_names` WHERE `characterid`=:id AND `name`!=:name', [':id'=>$id, ':name'=>$data['name']]);
+        #$data['oldnames'] = $dbcon->selectColumn('SELECT `name` FROM `'.$this->dbPrefix.'character_names` WHERE `characterid`=:id AND `name`!=:name', [':id'=>$id, ':name'=>$data['name']]);
         #Get levels
         $data['jobs'] = $dbcon->selectPair('SELECT `'.$this->dbprefix.'job`.`name` AS `job`, `level` FROM `'.$this->dbprefix.'character_jobs` INNER JOIN `'.$this->dbprefix.'job` ON `'.$this->dbprefix.'job`.`jobid`=`'.$this->dbprefix.'character_jobs`.`jobid` WHERE `characterid`=:id;', [':id'=>$id]);
         #Get previous known incarnations (combination of gender and race/clan)
@@ -61,7 +61,7 @@ trait Output
         unset($dbcon);
         return $data;
     }
-    
+
     private function GetCompany(string $id): array
     {
         $dbcon = (new \Simbiat\Database\Controller);
@@ -71,7 +71,7 @@ trait Output
         if (empty($data) || !is_array($data)) {
             return [];
         }
-        
+
         #Get old names
         $data['oldnames'] = $dbcon->selectColumn('SELECT `name` FROM `'.$this->dbprefix.'freecompany_names` WHERE `freecompanyid`=:id AND `name`!=:name', [':id'=>$id, ':name'=>$data['name']]);
         #Get members
@@ -87,7 +87,7 @@ trait Output
         unset($dbcon);
         return $data;
     }
-    
+
     private function GetLinkshell(string $id): array
     {
         $dbcon = (new \Simbiat\Database\Controller);
@@ -100,7 +100,7 @@ trait Output
         #Get old names
         $data['oldnames'] = $dbcon->selectColumn('SELECT `name` FROM `'.$this->dbprefix.'linkshell_names` WHERE `linkshellid`=:id AND `name`<>:name', [':id'=>$id, ':name'=>$data['name']]);
         #Get members
-        $data['members'] = $dbcon->selectAll('SELECT `'.$this->dbprefix.'linkshell_character`.`characterid`, `'.$this->dbprefix.'character`.`name`, `'.$this->dbprefix.'character`.`avatar`, `'.$this->dbprefix.'linkshell_rank`.`rank`, `'.$this->dbprefix.'linkshell_rank`.`lsrankid` FROM `'.$this->dbprefix.'linkshell_character` LEFT JOIN `'.$this->dbprefix.'linkshell_rank` ON `'.$this->dbprefix.'linkshell_rank`.`lsrankid`=`'.$this->dbprefix.'linkshell_character`.`rankid` LEFT JOIN `'.$this->dbprefix.'character` ON `'.$this->dbprefix.'linkshell_character`.`characterid`=`'.$this->dbprefix.'character`.`characterid` WHERE `'.$this->dbprefix.'linkshell_character`.`linkshellid`=:id ORDER BY `'.$this->dbprefix.'linkshell_character`.`rankid` ASC, `'.$this->dbprefix.'character`.`name` ASC', [':id'=>$id]); 
+        $data['members'] = $dbcon->selectAll('SELECT `'.$this->dbprefix.'linkshell_character`.`characterid`, `'.$this->dbprefix.'character`.`name`, `'.$this->dbprefix.'character`.`avatar`, `'.$this->dbprefix.'linkshell_rank`.`rank`, `'.$this->dbprefix.'linkshell_rank`.`lsrankid` FROM `'.$this->dbprefix.'linkshell_character` LEFT JOIN `'.$this->dbprefix.'linkshell_rank` ON `'.$this->dbprefix.'linkshell_rank`.`lsrankid`=`'.$this->dbprefix.'linkshell_character`.`rankid` LEFT JOIN `'.$this->dbprefix.'character` ON `'.$this->dbprefix.'linkshell_character`.`characterid`=`'.$this->dbprefix.'character`.`characterid` WHERE `'.$this->dbprefix.'linkshell_character`.`linkshellid`=:id ORDER BY `'.$this->dbprefix.'linkshell_character`.`rankid` ASC, `'.$this->dbprefix.'character`.`name` ASC', [':id'=>$id]);
         #Clean up the data from unnecessary (technical) clutter
         unset($data['serverid']);
         if ($data['crossworld']) {
@@ -115,9 +115,9 @@ trait Output
             }
         }
         unset($dbcon);
-        return $data;     
+        return $data;
     }
-    
+
     private function GetPVP(string $id): array
     {
         $dbcon = (new \Simbiat\Database\Controller);
@@ -138,9 +138,9 @@ trait Output
             (new \Simbiat\Cron)->add('ffentityupdate', ['pvpteam', $id], priority: 1, message: 'Updating PvP team with ID '.$id);
         }
         unset($dbcon);
-        return $data;   
+        return $data;
     }
-    
+
     private function GetAchievement(string $id): array
     {
         $dbcon = (new \Simbiat\Database\Controller);
@@ -157,9 +157,9 @@ trait Output
             (new \Simbiat\Cron)->add('ffentityupdate', ['achievement', $id, array_column($data['characters'], 'id')[0]], priority: 2, message: 'Updating achievement with ID '.$id);
         }
         unset($dbcon);
-        return $data;   
+        return $data;
     }
-    
+
     #Function to search for entities
     public function Search(string $what = ''): array
     {
@@ -216,7 +216,7 @@ trait Output
         unset($dbcon);
         return $result;
     }
-    
+
     #Function to get a list of entities
     public function listEntities(string $type, int $offset = 0, int $limit = 100): array
     {
@@ -253,7 +253,7 @@ trait Output
         $result['statistics'] = $dbcon->selectRow('SELECT COUNT(`'.$type.'id`) AS `count`, MAX(`updated`) AS `updated` FROM `'.$this->dbprefix.$type.'`');
         return $result;
     }
-    
+
     public function Statistics(string $type = 'genetics', string $cachepath = '', bool $nocache = false): array
     {
         #Sanitize type
@@ -287,7 +287,7 @@ trait Output
             }
         } else {
             $json = [];
-        }    
+        }
         #Get Lodestone object for optimization
         $Lodestone = (new \Simbiat\LodestoneModules\Converters);
         #Get ArrayHelpers object for optimization
@@ -301,13 +301,13 @@ trait Output
                     $data['characters']['clans'] = $json['characters']['clans'];
                 } else {
                     $data['characters']['clans'] = $ArrayHelpers->splitByKey($dbcon->countUnique($this->dbprefix.'character', 'clanid', '`'.$this->dbprefix.'character`.`deleted` IS NULL', $this->dbprefix.'clan', 'INNER', 'clanid', '`'.$this->dbprefix.'character`.`genderid`, CONCAT(`'.$this->dbprefix.'clan`.`race`, \' of \', `'.$this->dbprefix.'clan`.`clan`, \' clan\')', 'DESC', 0, ['`'.$this->dbprefix.'character`.`genderid`']), 'genderid', ['female', 'male'], [0, 1]);
-                }   
+                }
                 #Clan distribution by city
                 if (!$nocache && !empty($json['cities']['clans'])) {
                     $data['cities']['clans'] = $json['cities']['clans'];
                 } else {
-                    $data['cities']['clans'] = $ArrayHelpers->splitByKey($dbcon->SelectAll('SELECT `'.$this->dbprefix.'city`.`city`, CONCAT(`'.$this->dbprefix.'clan`.`race`, \' of \', `'.$this->dbprefix.'clan`.`clan`, \' clan\') AS `value`, COUNT(`'.$this->dbprefix.'character`.`characterid`) AS `count` FROM `'.$this->dbprefix.'character` LEFT JOIN `'.$this->dbprefix.'city` ON `'.$this->dbprefix.'character`.`cityid`=`'.$this->dbprefix.'city`.`cityid` LEFT JOIN `'.$this->dbprefix.'clan` ON `'.$this->dbprefix.'character`.`clanid`=`'.$this->dbprefix.'clan`.`clanid` GROUP BY `city`, `value` ORDER BY `count` DESC'), 'city', [$Lodestone->getCityName(2, $this->language), $Lodestone->getCityName(4, $this->language), $Lodestone->getCityName(5, $this->language)], []); 
-                }  
+                    $data['cities']['clans'] = $ArrayHelpers->splitByKey($dbcon->SelectAll('SELECT `'.$this->dbprefix.'city`.`city`, CONCAT(`'.$this->dbprefix.'clan`.`race`, \' of \', `'.$this->dbprefix.'clan`.`clan`, \' clan\') AS `value`, COUNT(`'.$this->dbprefix.'character`.`characterid`) AS `count` FROM `'.$this->dbprefix.'character` LEFT JOIN `'.$this->dbprefix.'city` ON `'.$this->dbprefix.'character`.`cityid`=`'.$this->dbprefix.'city`.`cityid` LEFT JOIN `'.$this->dbprefix.'clan` ON `'.$this->dbprefix.'character`.`clanid`=`'.$this->dbprefix.'clan`.`clanid` GROUP BY `city`, `value` ORDER BY `count` DESC'), 'city', [$Lodestone->getCityName(2, $this->language), $Lodestone->getCityName(4, $this->language), $Lodestone->getCityName(5, $this->language)], []);
+                }
                 #Clan distribution by grand company
                 if (!$nocache && !empty($json['grand_companies']['clans'])) {
                     $data['grand_companies']['clans'] = $json['grand_companies']['clans'];
@@ -748,7 +748,7 @@ trait Output
         file_put_contents($cachepath, json_encode(array_merge($json, $data), JSON_INVALID_UTF8_SUBSTITUTE | JSON_OBJECT_AS_ARRAY | JSON_THROW_ON_ERROR | JSON_PRESERVE_ZERO_FRACTION | JSON_PRETTY_PRINT));
         return $data;
     }
-    
+
     #Helper function to replace key names of 'value' with 'name' in
     private function valueToName(array $array): array
     {
@@ -758,7 +758,7 @@ trait Output
         }
         return $array;
     }
-    
+
     #Function to show X random entities
     public function GetRandomEntities(int $number): array
     {
@@ -775,7 +775,7 @@ trait Output
                 ORDER BY RAND() LIMIT '.$number.'
         ');
     }
-    
+
     #Function to show X fresh entities
     public function GetLastEntities(int $number): array
     {
