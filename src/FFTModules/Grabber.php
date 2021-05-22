@@ -3,10 +3,16 @@
 declare(strict_types=1);
 namespace Simbiat\FFTModules;
 
+use Simbiat\Database\Controller;
+use Simbiat\Lodestone;
+
 trait Grabber
 {
     #Attempt to grab data
-    private function LodestoneGrab(string $id, string $type = '', string $charid = ''): string|array
+    /**
+     * @throws \Exception
+     */
+    private function LodestoneGrab(string $id, string $type = '', string $charId = ''): string|array
     {
         switch ($type) {
             case 'character':
@@ -14,7 +20,7 @@ trait Grabber
                 if (is_numeric($id) === true) {
                     $data = $this->CharacterGrab($id);
                 } else {
-                    $data = $this->LodestoneGrab($id, '');
+                    $data = $this->LodestoneGrab($id);
                 }
                 break;
             case 'freecompany':
@@ -22,7 +28,7 @@ trait Grabber
                 if (is_numeric($id) === true) {
                     $data = $this->CompanyGrab($id);
                 } else {
-                    $data = $this->LodestoneGrab($id, '');
+                    $data = $this->LodestoneGrab($id);
                 }
                 break;
             case 'linkshell':
@@ -30,7 +36,7 @@ trait Grabber
                 if (is_numeric($id) === true) {
                     $data = $this->LinkshellGrab($id);
                 } else {
-                    $data = $this->LodestoneGrab($id, '');
+                    $data = $this->LodestoneGrab($id);
                 }
                 break;
             case 'crossworldlinkshell':
@@ -38,7 +44,7 @@ trait Grabber
                 if (preg_match('/[a-zA-Z0-9]{40}/mi', $id)) {
                     $data = $this->CrossLinkGrab($id);
                 } else {
-                    $data = $this->LodestoneGrab($id, '');
+                    $data = $this->LodestoneGrab($id);
                 }
                 break;
             case 'pvpteam':
@@ -46,17 +52,17 @@ trait Grabber
                 if (preg_match('/[a-zA-Z0-9]{40}/mi', $id)) {
                     $data = $this->PVPGrab($id);
                 } else {
-                    $data = $this->LodestoneGrab($id, '');
+                    $data = $this->LodestoneGrab($id);
                 }
                 break;
             case 'achievement':
                 #Check if valid format
                 if (is_numeric($id) === true) {
                     #Check if character is provided
-                    if (empty($charid)) {
+                    if (empty($charId)) {
                         $data = 'No character ID provided for achievement';
                     } else {
-                        $data = $this->AchievementGrab($charid, $id);
+                        $data = $this->AchievementGrab($charId, $id);
                     }
                 } else {
                     $data = 'Wrong ID for achievement';
@@ -94,14 +100,14 @@ trait Grabber
                 }
                 break;
             default:
-                $data = 'Unsuported type '.$type;
+                $data = 'Unsupported type '.$type;
         }
         return $data;
     }
-    
+
     private function CharacterGrab(string $id): string|array
     {
-        $Lodestone = (new \Simbiat\Lodestone);
+        $Lodestone = (new Lodestone);
         $data = $Lodestone->setLanguage($this->language)->setUseragent($this->useragent)->getCharacter($id)->getCharacterJobs($id)->getCharacterAchievements($id, false, 0, false, false, true)->getResult();
         if (empty($data['characters'][$id]['server'])) {
             if (@$data['characters'][$id] == 404) {
@@ -122,10 +128,10 @@ trait Grabber
         $data['404'] = false;
         return $data;
     }
-    
+
     private function CompanyGrab(string $id): string|array
     {
-        $Lodestone = (new \Simbiat\Lodestone);
+        $Lodestone = (new Lodestone);
         $data = $Lodestone->setLanguage($this->language)->setUseragent($this->useragent)->getFreeCompany($id)->getFreeCompanyMembers($id, 0)->getResult();
         if (empty($data['freecompanies'][$id]['server']) || (!empty($data['freecompanies'][$id]['members']) && count($data['freecompanies'][$id]['members']) < $data['freecompanies'][$id]['members_count'])) {
             if (@$data['freecompanies'][$id] == 404) {
@@ -146,10 +152,10 @@ trait Grabber
         $data['404'] = false;
         return $data;
     }
-    
+
     private function LinkshellGrab(string $id): string|array
     {
-        $Lodestone = (new \Simbiat\Lodestone);
+        $Lodestone = (new Lodestone);
         $data = $Lodestone->setLanguage($this->language)->setUseragent($this->useragent)->getLinkshellMembers($id, 0)->getResult();
         if (empty($data['linkshells'][$id]['server']) || (!empty($data['linkshells'][$id]['members']) && count($data['linkshells'][$id]['members']) < $data['linkshells'][$id]['memberscount'])) {
             if (@$data['linkshells'][$id]['members'] == 404) {
@@ -170,10 +176,10 @@ trait Grabber
         $data['404'] = false;
         return $data;
     }
-    
+
     private function CrossLinkGrab(string $id): string|array
     {
-        $Lodestone = (new \Simbiat\Lodestone);
+        $Lodestone = (new Lodestone);
         $data = $Lodestone->setLanguage($this->language)->setUseragent($this->useragent)->getLinkshellMembers($id, 0)->getResult();
         if (empty($data['linkshells'][$id]['dataCenter']) || (!empty($data['linkshells'][$id]['members']) && count($data['linkshells'][$id]['members']) < $data['linkshells'][$id]['memberscount'])) {
             if (@$data['linkshells'][$id]['members'] == 404) {
@@ -194,10 +200,10 @@ trait Grabber
         $data['404'] = false;
         return $data;
     }
-    
+
     private function PVPGrab(string $id): string|array
     {
-        $Lodestone = (new \Simbiat\Lodestone);
+        $Lodestone = (new Lodestone);
         $data = $Lodestone->getPvPTeam($id)->getResult();
         if (empty($data['pvpteams'][$id]['dataCenter']) || empty($data['pvpteams'][$id]['members'])) {
             if (@$data['pvpteams'][$id]['members'] == 404) {
@@ -218,21 +224,23 @@ trait Grabber
         $data['404'] = false;
         return $data;
     }
-    
+
+    /**
+     * @throws \Exception
+     */
     private function AchievementGrab(string $character, string $achievement): string|array
     {
         #Grab data
-        $Lodestone = (new \Simbiat\Lodestone)->setUseragent($this->useragent)->setLanguage($this->language);
-        $data = NULL;
+        $Lodestone = (new Lodestone)->setUseragent($this->useragent)->setLanguage($this->language);
         $data = $Lodestone->getCharacterAchievements($character, intval($achievement))->getResult();
         if (empty($data['characters'][$character]['achievements'][$achievement])) {
             $error = $Lodestone->getLastError();
             #Attempt to get other characters
             if ($error['error'] === 'Requests are (temporary) blocked, 403') {
-                $dbcon = (new \Simbiat\Database\Controller);
+                $dbController = (new Controller);
                 #Get characters
-                $altChars = $dbcon->selectColumn(
-                    'SELECT `characterid` FROM `'.$this->dbprefix.'character_achievement` WHERE `achievementid`=:ach AND `characterid` !=:char ORDER BY `time` DESC;',
+                $altChars = $dbController->selectColumn(
+                    'SELECT `characterid` FROM `ffxiv__character_achievement` WHERE `achievementid`=:ach AND `characterid` !=:char ORDER BY `time` DESC;',
                     [
                         ':ach' => $achievement,
                         ':char' => $character,
@@ -244,16 +252,14 @@ trait Grabber
                     if (!empty($data['characters'][$char]['achievements'][$achievement])) {
                         #Update character ID
                         $character = $char;
-                        goto datafound;
+                        goto dataFound;
                     }
                 }
-                return $error['error'].' ('.$error['url'].')';
-            } else {
-                return $error['error'].' ('.$error['url'].')';
             }
+            return $error['error'].' ('.$error['url'].')';
         }
-        datafound:
-        #Try to get achievement ID as seen in Lodestone database (playguide)
+        dataFound:
+        #Try to get achievement ID as seen in Lodestone database (play guide)
         $data = $Lodestone->searchDatabase('achievement', 0, 0, $data['characters'][$character]['achievements'][$achievement]['name'])->getResult();
         #Remove counts elements from achievement database
         unset($data['database']['achievement']['pageCurrent'], $data['database']['achievement']['pageTotal'], $data['database']['achievement']['total']);
@@ -308,4 +314,3 @@ trait Grabber
         return $bindings;
     }
 }
-?>

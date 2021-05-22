@@ -4,26 +4,26 @@ declare(strict_types=1);
 namespace Simbiat\FFTModules;
 
 trait Crest
-{   
-    public function ImageShow(string $imgname): string
+{
+    public function ImageShow(string $imgName): string
     {
-        $imgname = dirname(__DIR__).'/Images/'.$imgname;
-        if (!file_exists($imgname)) {
+        $imgName = dirname(__DIR__).'/Images/'.$imgName;
+        if (!file_exists($imgName)) {
             #Use placeholder
-            $imgname = dirname(__DIR__).'/Images/fftracker.png';
+            $imgName = dirname(__DIR__).'/Images/fftracker.png';
         }
-        return $imgname;
+        return $imgName;
     }
-    
+
     #Function to merge 1 to 3 images making up a crest on Lodestone into 1 stored on tracker side
-    private function CrestMerge(string $groupid, array $images): string
+    private function CrestMerge(string $groupId, array $images): string
     {
         try {
-            $imgfolder = dirname(__DIR__).'/Images/merged-crests/';
+            $imgFolder = dirname(__DIR__).'/Images/merged-crests/';
             #Checking if directory exists
-            if (!file_exists($imgfolder)) {
+            if (!file_exists($imgFolder)) {
                 #Creating directory
-                mkdir($imgfolder, 0777, true);
+                mkdir($imgFolder, 0777, true);
             }
             #Preparing set of layers, since Lodestone stores crests as 3 (or less) separate images
             $layers = array();
@@ -48,26 +48,25 @@ trait Crest
                 imagedestroy($layers[$i]);
             }
             #Saving temporary file
-            imagepng($image, $imgfolder.$groupid.'.png', 9, PNG_ALL_FILTERS);
+            imagepng($image, $imgFolder.$groupId.'.png', 9, PNG_ALL_FILTERS);
             #Explicitely destroy image object
             imagedestroy($image);
             #Get hash of the file
-            if (!file_exists($imgfolder.$groupid.'.png')) {
+            if (!file_exists($imgFolder.$groupId.'.png')) {
                 #Failed to save the image
                 return '';
             }
-            $hash = hash_file('sha3-256', $imgfolder.$groupid.'.png');
+            $hash = hash_file('sha3-256', $imgFolder.$groupId.'.png');
             #Check if file with hash name exists
-            if (!file_exists($imgfolder.$hash.'.png')) {
+            if (!file_exists($imgFolder.$hash.'.png')) {
                 #Copy the file to new path
-                copy($imgfolder.$groupid.'.png', $imgfolder.$hash.'.png');
+                copy($imgFolder.$groupId.'.png', $imgFolder.$hash.'.png');
             }
             #Remove temporary file
-            unlink($imgfolder.$groupid.'.png');
+            unlink($imgFolder.$groupId.'.png');
             return $hash;
         } catch (\Exception $e) {
             return '';
         }
     }
 }
-?>

@@ -1,2 +1,2 @@
 # FFTracker
-Library, which is is used for https://simbiat.ru/fftracker
+Library, which is used for https://www.simbiat.ru/fftracker

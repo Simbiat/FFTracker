@@ -4,15 +4,14 @@ declare(strict_types=1);
 namespace Simbiat\FFTModules;
 
 trait Setters
-{    
+{
     #Settings required for Lodestone library
     protected string $useragent = '';
     protected string $language = 'na';
-    protected string $dbprefix = 'ff__';
     protected int $maxage = 90;
     public int $maxlines = 50;
     protected string $crestpath = '';
-    
+
     #############
     #Setters
     #############
@@ -21,42 +20,33 @@ trait Setters
         $this->useragent = $useragent;
         return $this;
     }
-    
+
     public function setMaxage(int $maxage = 90): self
     {
         $this->maxage = $maxage;
         return $this;
     }
-    
+
     public function setMaxlines(int $maxlines = 50): self
     {
         $this->maxlines = $maxlines;
         return $this;
     }
-    
+
     public function setLanguage(string $language = 'en'): self
     {
         #En is used only for user convinience, in reality it uses NA (North America)
         if ($language === 'en') {
             $language = 'na';
         }
-        if (!in_array($language, self::langallowed)) {
+        if (!in_array($language, self::langAllowed)) {
             $language = 'na';
         }
         if (in_array($language, ['jp', 'ja'])) {$language = 'jp';}
         $this->language = $language;
         return $this;
     }
-    
-    public function setDbPrefix(string $dbprefix = 'ff__'): self
-    {
-        if (empty($dbprefix)) {
-            $dbprefix = 'ff__';
-        }
-        $this->dbprefix = $dbprefix;
-        return $this;
-    }
-    
+
     #############
     #Getters
     #############
@@ -64,7 +54,7 @@ trait Setters
     {
         return $this->useragent;
     }
-    
+
     public function getMaxlines(): int
     {
         if (empty($this->maxlines)) {
@@ -72,7 +62,7 @@ trait Setters
         }
         return $this->maxlines;
     }
-    
+
     public function getMaxage(): int
     {
         if (empty($this->maxage)) {
@@ -80,31 +70,25 @@ trait Setters
         }
         return $this->maxage;
     }
-    
+
     public function getLanguage(): string
     {
         $language = $this->language;
-        if (!in_array($language, self::langallowed)) {
+        if (!in_array($language, self::langAllowed)) {
             $language = 'na';
         }
         if (in_array($language, ['jp', 'ja'])) {$language = 'jp';}
         $this->language = $language;
         return $this->language;
     }
-    
-    public function getDbPrefix(): string
-    {
-        return $this->dbprefix;
-    }
-    
+
     public function getCrestPath(): string
     {
         $crestpath = $this->crestpath;
         if ($crestpath === '') {
             $crestpath = dirname(__DIR__).'/Images/merged-crests';
         }
-        $this->crestpath = preg_replace('/(.*[^\\\\\/]{1,})([\\\\\/]{1,}$)/m', '$1', $crestpath).'/';
+        $this->crestpath = preg_replace('/(.*[^\\\\\/]+)([\\\\\/]+$)/m', '$1', $crestpath).'/';
         return $this->crestpath;
     }
 }
-?>
