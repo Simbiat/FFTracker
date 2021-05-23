@@ -57,10 +57,17 @@ trait Crest
                 return '';
             }
             $hash = hash_file('sha3-256', $imgFolder.$groupId.'.png');
+            #Get final path based on hash
+            $finalPath = $imgFolder.substr($hash, 0, 2).'/'.substr($hash, 2, 2).'/';
+            #Check if path exists
+            if (!is_dir($finalPath)) {
+                #Create it recursively
+                mkdir($finalPath, recursive: true);
+            }
             #Check if file with hash name exists
-            if (!file_exists($imgFolder.$hash.'.png')) {
+            if (!file_exists($finalPath.$hash.'.png')) {
                 #Copy the file to new path
-                copy($imgFolder.$groupId.'.png', $imgFolder.$hash.'.png');
+                copy($imgFolder.$groupId.'.png', $finalPath.$hash.'.png');
             }
             #Remove temporary file
             unlink($imgFolder.$groupId.'.png');

@@ -1,0 +1,4 @@
+[submodule "src/Images/merged-crests"]
+	path = src/Images/merged-crests
+	url = https://github.com/Simbiat/FFXIV-Crests
+	branch = main
