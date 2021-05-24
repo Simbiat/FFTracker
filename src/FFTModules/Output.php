@@ -650,7 +650,7 @@ trait Output
                 if (!$nocache && !empty($json['timelines']['nameday'])) {
                     $data['timelines']['nameday'] = $json['timelines']['nameday'];
                 } else {
-                    $data['timelines']['nameday'] = $dbcon->SelectAll('SELECT `ffxiv__nameday`.`nameday` AS `value`, COUNT(`ffxiv__character`.`namedayid`) AS `count` FROM `ffxiv__character` INNER JOIN `ffxiv__nameday` ON `ffxiv__character`.`namedayid`=`ffxiv__nameday`.`namedayid` GROUP BY `value` ORDER BY `count`');
+                    $data['timelines']['nameday'] = $dbcon->SelectAll('SELECT `ffxiv__nameday`.`nameday` AS `value`, COUNT(`ffxiv__character`.`namedayid`) AS `count` FROM `ffxiv__character` INNER JOIN `ffxiv__nameday` ON `ffxiv__character`.`namedayid`=`ffxiv__nameday`.`namedayid` GROUP BY `value` ORDER BY `ffxiv__nameday`.`namedayid`');
                 }
                 #Timeline of groups formations
                 if (!$nocache && !empty($json['timelines']['formed'])) {
@@ -664,7 +664,7 @@ trait Output
                             UNION ALL
                             SELECT `formed`, 0 AS `freecompanies`, 0 AS `linkshells`, COUNT(`formed`) AS `pvpteams` FROM `ffxiv__pvpteam` WHERE `formed` IS NOT NULL GROUP BY `formed`
                         ) `tempresults`
-                        GROUP BY `formed` ORDER BY `formed` '
+                        GROUP BY `formed` ORDER BY `formed`'
                     );
                 }
                 #Timeline of entities registration
