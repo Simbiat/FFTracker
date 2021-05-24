@@ -224,7 +224,17 @@ trait Output
             #If there are actual entities matching the criteria - show $maxlines amount of them
             if (array_sum($result['counts']) > 0) {
                 #Need to use a secondary SELECT, because IN BOOLEAN MODE does not sort by default and we need `relevance` column for that, but we do not want to send to client
-                $result['entities'] = $dbcon->selectAll(' as `type`, `name`, `icon`, IF(`achievementid` = :id, 99999, MATCH (`name`, `howto`) AGAINST (:name IN BOOLEAN MODE)) AS `relevance` FROM `ffxiv__achievement` WHERE `achievementid` = :id OR MATCH (`name`, `howto`) AGAINST (:name IN BOOLEAN MODE)
+                $result['entities'] = $dbcon->selectAll('
+                        SELECT `id`, `type`, `name`, `icon` FROM (
+                            SELECT `characterid` AS `id`, \'character\' as `type`, `name`, `avatar` AS `icon`, IF(`characterid` = :id, 99999, MATCH (`name`, `biography`) AGAINST (:name IN BOOLEAN MODE)) AS `relevance` FROM `ffxiv__character` WHERE `characterid` = :id OR MATCH (`name`, `biography`) AGAINST (:name IN BOOLEAN MODE)
+                            UNION ALL
+                            SELECT `freecompanyid` AS `id`, \'freecompany\' as `type`, `name`, `crest` AS `icon`, IF(`freecompanyid` = :id, 99999, MATCH (`name`, `tag`, `slogan`, `estate_zone`, `estate_message`) AGAINST (:name IN BOOLEAN MODE)) AS `relevance` FROM `ffxiv__freecompany` WHERE `freecompanyid` = :id OR MATCH (`name`, `tag`, `slogan`, `estate_zone`, `estate_message`) AGAINST (:name IN BOOLEAN MODE)
+                            UNION ALL
+                            SELECT `linkshellid` AS `id`, IF(`crossworld`=1, \'crossworld_linkshell\', \'linkshell\') as `type`, `name`, NULL AS `icon`, IF(`linkshellid` = :id, 99999, MATCH (`name`) AGAINST (:name IN BOOLEAN MODE)) AS `relevance` FROM `ffxiv__linkshell` WHERE `linkshellid` = :id OR MATCH (`name`) AGAINST (:name IN BOOLEAN MODE)
+                            UNION ALL
+                            SELECT `pvpteamid` AS `id`, \'pvpteam\' as `type`, `name`, `crest` AS `icon`, IF(`pvpteamid` = :id, 99999, MATCH (`name`) AGAINST (:name IN BOOLEAN MODE)) AS `relevance` FROM `ffxiv__pvpteam` WHERE `pvpteamid` = :id OR MATCH (`name`) AGAINST (:name IN BOOLEAN MODE)
+                            UNION ALL
+                            SELECT `achievementid` AS `id`, \'achievement\' as `type`, `name`, `icon`, IF(`achievementid` = :id, 99999, MATCH (`name`, `howto`) AGAINST (:name IN BOOLEAN MODE)) AS `relevance` FROM `ffxiv__achievement` WHERE `achievementid` = :id OR MATCH (`name`, `howto`) AGAINST (:name IN BOOLEAN MODE)
                             ORDER BY `relevance` DESC, `name` LIMIT ' .$this->maxlines.'
                         ) tempdata
                 ', $where_pdo);
@@ -270,8 +280,8 @@ trait Output
         }
         $dbcon = (new Controller);
         #Forcing index, because for some reason MySQL is using filesort for this query
-        $result['entities'] = $dbcon->selectAll('SELECT `'.$type.'id` AS `id`, '.($type === 'linkshell' ? 'IF(`crossworld`=1, \'crossworld_linkshell\', \'linkshell\')' : '\''.$type.'\'').' as `type`, `name`, '.$avatar.' AS `icon`, `updated` FROM `ffxiv__` FORCE INDEX(`name_order`) ORDER BY `name` ASC LIMIT '.$offset.', '.$limit);
-        $result['statistics'] = $dbcon->selectRow('SELECT COUNT(`'.$type.'id`) AS `count`, MAX(`updated`) AS `updated` FROM `ffxiv__`');
+        $result['entities'] = $dbcon->selectAll('SELECT `'.$type.'id` AS `id`, '.($type === 'linkshell' ? 'IF(`crossworld`=1, \'crossworld_linkshell\', \'linkshell\')' : '\''.$type.'\'').' as `type`, `name`, '.$avatar.' AS `icon`, `updated` FROM `ffxiv__'.$type.'` FORCE INDEX(`name_order`) ORDER BY `name` ASC LIMIT '.$offset.', '.$limit);
+        $result['statistics'] = $dbcon->selectRow('SELECT COUNT(`'.$type.'id`) AS `count`, MAX(`updated`) AS `updated` FROM `ffxiv__'.$type.'`');
         return $result;
     }
 
@@ -626,7 +636,7 @@ trait Output
                 if (!$nocache && !empty($json['other']['achievements'])) {
                     $data['other']['achievements'] = $json['other']['achievements'];
                 } else {
-                    $data['other']['achievements'] = $dbcon->SelectAll(' as `type`, `ffxiv__achievement`.`category`, `ffxiv__achievement`.`achievementid` AS `id`, `ffxiv__achievement`.`icon`, `ffxiv__achievement`.`name` AS `name`, `count` FROM (SELECT `ffxiv__character_achievement`.`achievementid`, count(`ffxiv__character_achievement`.`achievementid`) AS `count` from `ffxiv__character_achievement` GROUP BY `ffxiv__character_achievement`.`achievementid` ORDER BY `count`) `tempresult` INNER JOIN `ffxiv__achievement` ON `tempresult`.`achievementid`=`ffxiv__achievement`.`achievementid` WHERE `ffxiv__achievement`.`category` IS NOT NULL ORDER BY `count` ASC');
+                    $data['other']['achievements'] = $dbcon->SelectAll('SELECT \'achievement\' as `type`, `ffxiv__achievement`.`category`, `ffxiv__achievement`.`achievementid` AS `id`, `ffxiv__achievement`.`icon`, `ffxiv__achievement`.`name` AS `name`, `count` FROM (SELECT `ffxiv__character_achievement`.`achievementid`, count(`ffxiv__character_achievement`.`achievementid`) AS `count` from `ffxiv__character_achievement` GROUP BY `ffxiv__character_achievement`.`achievementid` ORDER BY `count`) `tempresult` INNER JOIN `ffxiv__achievement` ON `tempresult`.`achievementid`=`ffxiv__achievement`.`achievementid` WHERE `ffxiv__achievement`.`category` IS NOT NULL ORDER BY `count` ASC');
                     #Split achievements by categories
                     $data['other']['achievements'] = $ArrayHelpers->splitByKey($data['other']['achievements'], 'category', [], []);
                     #Get only top 20 for each category
@@ -704,7 +714,11 @@ trait Output
                     $data['bugs']['nomembers'] = $json['bugs']['nomembers'];
                 } else {
                     $data['bugs']['nomembers'] = $dbcon->SelectAll(
-                        ' AS `type` FROM `ffxiv__pvpteam` WHERE `deleted` IS NULL AND `pvpteamid` NOT IN (SELECT `pvpteamid` FROM `ffxiv__pvpteam_character`)
+                        'SELECT `freecompanyid` AS `id`, `name`, \'freecompany\' AS `type` FROM `ffxiv__freecompany` WHERE `deleted` IS NULL AND `freecompanyid` NOT IN (SELECT `freecompanyid` FROM `ffxiv__freecompany_character`)
+                        UNION
+                        SELECT `linkshellid` AS `id`, `name`, IF(`crossworld`=1, \'crossworld_linkshell\', \'linkshell\') AS `type` FROM `ffxiv__linkshell` WHERE `deleted` IS NULL AND `linkshellid` NOT IN (SELECT `linkshellid` FROM `ffxiv__linkshell_character`)
+                        UNION
+                        SELECT `pvpteamid` AS `id`, `name`, \'pvpteam\' AS `type` FROM `ffxiv__pvpteam` WHERE `deleted` IS NULL AND `pvpteamid` NOT IN (SELECT `pvpteamid` FROM `ffxiv__pvpteam_character`)
                         ORDER BY `name`;'
                     );
                 }

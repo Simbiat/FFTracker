@@ -68,8 +68,9 @@ trait Updater
                     ];
                     #Insert actual level
                     $queries[] = [
-                        'INSERT INTO `ffxiv__character_jobs`(`characterid`, `jobid`, `level`) VALUES (:characterid, (SELECT `jobid` FROM `ffxiv__job` WHERE `name`=:job), :level) ON DUPLICATE KEY UPDATE `level`=:level;',
+                        'INSERT INTO `ffxiv__character_jobs`(`characterid`, `jobid`, `level`) VALUES (:characterid, (SELECT `jobid` FROM `ffxiv__job` WHERE `name`=:job LIMIT 1), :level) ON DUPLICATE KEY UPDATE `level`=:level;',
                         [
+                            ':characterid' => $data['characterid'],
                             ':job' => [$job, 'string'],
                             ':level' => [(empty($level) ? 0 : intval($level)), 'int'],
                         ],
@@ -193,7 +194,14 @@ trait Updater
             $data['crest'] = $this->CrestMerge($data['freecompanyid'], $data['crest']);
             #Main query to insert or update a Free Company
             $queries[] = [
-                ')=:estate_address LIMIT 1), `estate_message`=:estate_message, `Role-playing`=:roleplaying, `Leveling`=:leveling, `Casual`=:casual, `Hardcore`=:hardcore, `Dungeons`=:dungeons, `Guildhests`=:guildhests, `Trials`=:trials, `Raids`=:raids, `PvP`=:pvp, `Tank`=:tank, `Healer`=:healer, `DPS`=:dps, `Crafter`=:crafter, `Gatherer`=:gatherer;\'',
+                'INSERT INTO `ffxiv__freecompany` (
+                    `freecompanyid`, `name`, `serverid`, `formed`, `registered`, `updated`, `deleted`, `grandcompanyid`, `tag`, `crest`, `rank`, `slogan`, `activeid`, `recruitment`, `communityid`, `estate_zone`, `estateid`, `estate_message`, `Role-playing`, `Leveling`, `Casual`, `Hardcore`, `Dungeons`, `Guildhests`, `Trials`, `Raids`, `PvP`, `Tank`, `Healer`, `DPS`, `Crafter`, `Gatherer`
+                )
+                VALUES (
+                    :freecompanyid, :name, (SELECT `serverid` FROM `ffxiv__server` WHERE `server`=:server), :formed, UTC_DATE(), UTC_TIMESTAMP(), NULL, (SELECT `gcrankid` FROM `ffxiv__grandcompany_rank` WHERE `gc_name`=:grandcompany ORDER BY `gcrankid` LIMIT 1), :tag, :crest, :rank, :slogan, (SELECT `activeid` FROM `ffxiv__timeactive` WHERE `active`=:active AND `active` IS NOT NULL LIMIT 1), :recruitment, :communityid, :estate_zone, (SELECT `estateid` FROM `ffxiv__estate` WHERE CONCAT(\'Plot \', `plot`, \', \', `ward`, \' Ward, \', `area`, \' (\', CASE WHEN `size` = 1 THEN \'Small\' WHEN `size` = 2 THEN \'Medium\' WHEN `size` = 3 THEN \'Large\' END, \')\')=:estate_address LIMIT 1), :estate_message, :roleplaying, :leveling, :casual, :hardcore, :dungeons, :guildhests, :trials, :raids, :pvp, :tank, :healer, :dps, :crafter, :gatherer
+                )
+                ON DUPLICATE KEY UPDATE
+                    `name`=:name, `serverid`=(SELECT `serverid` FROM `ffxiv__server` WHERE `server`=:server), `updated`=UTC_TIMESTAMP(), `deleted`=NULL, `tag`=:tag, `crest`=COALESCE(:crest, `crest`), `rank`=:rank, `slogan`=:slogan, `activeid`=(SELECT `activeid` FROM `ffxiv__timeactive` WHERE `active`=:active AND `active` IS NOT NULL LIMIT 1), `recruitment`=:recruitment, `communityid`=:communityid, `estate_zone`=:estate_zone, `estateid`=(SELECT `estateid` FROM `ffxiv__estate` WHERE CONCAT(\'Plot \', `plot`, \', \', `ward`, \' Ward, \', `area`, \' (\', CASE WHEN `size` = 1 THEN \'Small\' WHEN `size` = 2 THEN \'Medium\' WHEN `size` = 3 THEN \'Large\' END, \')\')=:estate_address LIMIT 1), `estate_message`=:estate_message, `Role-playing`=:roleplaying, `Leveling`=:leveling, `Casual`=:casual, `Hardcore`=:hardcore, `Dungeons`=:dungeons, `Guildhests`=:guildhests, `Trials`=:trials, `Raids`=:raids, `PvP`=:pvp, `Tank`=:tank, `Healer`=:healer, `DPS`=:dps, `Crafter`=:crafter, `Gatherer`=:gatherer;',
                 [
                     ':freecompanyid'=>$data['freecompanyid'],
                     ':name'=>$data['name'],
@@ -566,7 +574,20 @@ trait Updater
         }
         try {
             $dbcon = (new Controller);
-            $entities = $dbcon->selectAll(' AS `type`, `ffxiv__achievement`.`achievementid` AS `id`, (SELECT `characterid` FROM `ffxiv__character_achievement` WHERE `ffxiv__character_achievement`.`achievementid` = `ffxiv__achievement`.`achievementid` LIMIT 1) AS `charid`, `updated`, NULL AS `deleted` FROM `ffxiv__achievement` HAVING `charid` IS NOT NULL
+            $entities = $dbcon->selectAll('
+                    SELECT `type`, `id`, `charid` FROM (
+                        SELECT * FROM (
+                            SELECT \'character\' AS `type`, `characterid` AS `id`, \'\' AS `charid`, `updated`, `deleted` FROM `ffxiv__character`
+                            UNION ALL
+                            SELECT \'freecompany\' AS `type`, `freecompanyid` AS `id`, \'\' AS `charid`, `updated`, `deleted` FROM `ffxiv__freecompany`
+                            UNION ALL
+                            SELECT \'pvpteam\' AS `type`, `pvpteamid` AS `id`, \'\' AS `charid`, `updated`, `deleted` FROM `ffxiv__pvpteam`
+                            UNION ALL
+                            SELECT IF(`crossworld` = 0, \'linkshell\', \'crossworldlinkshell\') AS `type`, `linkshellid`, \'\' AS `charid`, `updated`, `deleted` AS `id` FROM `ffxiv__linkshell`
+                            WHERE `deleted` IS NULL
+                        ) `nonach`
+                        UNION ALL
+                        SELECT \'achievement\' AS `type`, `ffxiv__achievement`.`achievementid` AS `id`, (SELECT `characterid` FROM `ffxiv__character_achievement` WHERE `ffxiv__character_achievement`.`achievementid` = `ffxiv__achievement`.`achievementid` LIMIT 1) AS `charid`, `updated`, NULL AS `deleted` FROM `ffxiv__achievement` HAVING `charid` IS NOT NULL
                     ) `allentities`
                     ORDER BY `updated` LIMIT :maxlines',
                 [
@@ -589,13 +610,15 @@ trait Updater
     private function RemoveFromGroup(string $characterid, string $grouptype): array
     {
         #If previously registered in a group, add to list of previous members for it
+        /** @noinspection SqlResolve */
         $queries[] = [
-            'INSERT INTO `ffxiv__'.$grouptype.'_x_character`(`characterid`, `'.$grouptype.'id`) SELECT `ffxiv__'.$grouptype.'_character`.`characterid`, `ffxiv__'.$grouptype.'_character`.`'.$grouptype.'id` FROM `ffxiv__'.$grouptype.'_character` WHERE `ffxiv__'.$grouptype.'_character`.`characterid`=:characterid ON DUPLICATE KEY UPDATE `ffxiv__'.$grouptype.'_x_character`.`characterid`=`ffxiv__'.$grouptype.'_x_character`.`characterid`;',
+            'INSERT INTO `ffxiv__'.$grouptype.'_x_character` (`characterid`, `'.$grouptype.'id`) SELECT `ffxiv__'.$grouptype.'_character`.`characterid`, `ffxiv__'.$grouptype.'_character`.`'.$grouptype.'id` FROM `ffxiv__'.$grouptype.'_character` WHERE `ffxiv__'.$grouptype.'_character`.`characterid`=:characterid ON DUPLICATE KEY UPDATE `ffxiv__'.$grouptype.'_x_character`.`characterid`=`ffxiv__'.$grouptype.'_x_character`.`characterid`;',
             [
                 ':characterid'=>$characterid,
             ],
         ];
         #Remove from group
+        /** @noinspection SqlResolve */
         $queries[] = [
             'DELETE FROM `ffxiv__'.$grouptype.'_character` WHERE `characterid`=:characterid;',
             [
@@ -609,6 +632,7 @@ trait Updater
     private function MassRemoveFromGroup(string $groupid, string $grouptype, string $xmembers): array
     {
         #If previously registered in a group, add to list of previous members for it
+        /** @noinspection SqlResolve */
         $queries[] = [
             'INSERT INTO `ffxiv__'.$grouptype.'_x_character` (`characterid`, `'.$grouptype.'id`) SELECT `ffxiv__'.$grouptype.'_character`.`characterid`, `ffxiv__'.$grouptype.'_character`.`'.$grouptype.'id` FROM `ffxiv__'.$grouptype.'_character` WHERE `ffxiv__'.$grouptype.'_character`.`'.$grouptype.'id`=:groupid'.($xmembers === '\'\'' ? '' : ' AND `ffxiv__'.$grouptype.'_character`.`characterid` NOT IN ('.$xmembers.')').' ON DUPLICATE KEY UPDATE `ffxiv__'.$grouptype.'_x_character`.`characterid`=`ffxiv__'.$grouptype.'_x_character`.`characterid`;',
             [
@@ -616,6 +640,7 @@ trait Updater
             ]
         ];
         #Remove from group
+        /** @noinspection SqlResolve */
         $queries[] = [
             'DELETE FROM `ffxiv__'.$grouptype.'_character` WHERE `'.$grouptype.'id`=:groupid'.($xmembers === '\'\'' ? '' : ' AND `ffxiv__'.$grouptype.'_character`.`characterid` NOT IN ('.$xmembers.')').';',
             [
@@ -640,7 +665,7 @@ trait Updater
             #Remove free company ranks (not ranking!)
             if ($type === 'freecompany') {
                 $queries[] = [
-                    'DELETE FROM `ffxiv__freecompany_rank` WHERE `'.$type.'id` = :id',
+                    'DELETE FROM `ffxiv__freecompany_rank` WHERE `freecompanyid` = :id',
                     [':id'=>$id],
                 ];
             }
