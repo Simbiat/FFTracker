@@ -287,40 +287,37 @@ trait Updater
             }
             #Set list of members for select and list of members already registered
             if (empty($members)) {
-                $inmembers = '\'\'';
-                $regmembers = [];
+                $inMembers = '\'\'';
+                $regMembers = [];
             } else {
-                $inmembers = implode(',', $members);
-                $regmembers = (new Controller)->selectColumn('SELECT `characterid` FROM `ffxiv__character` WHERE `characterid` IN ('.$inmembers.')');
+                $inMembers = implode(',', $members);
+                $regMembers = (new Controller)->selectColumn('SELECT `characterid` FROM `ffxiv__character` WHERE `characterid` IN ('.$inMembers.')');
             }
             if (!empty($data['members'])) {
+                $this->charMassCron($data['members'], $regMembers);
                 foreach ($data['members'] as $memberid=>$member) {
-                    if (preg_match('/^\d{1,10}$/', strval($memberid)) && !empty($member['rank'])) {
-                        #Register or update rank names
-                        $queries[] = [
-                                'INSERT INTO `ffxiv__freecompany_rank` (`freecompanyid`, `rankid`, `rankname`) VALUE (:freecompanyid, :rankid, :rankname) ON DUPLICATE KEY UPDATE `rankname`=:rankname',
-                                [
-                                    ":freecompanyid"=>$data['freecompanyid'],
-                                    ":rankid"=>$member['rankid'],
-                                    ":rankname"=>$member['rank'],
-                                ],
-                            ];
-                        #Actually registering/updating members
-                        if (in_array(strval($memberid), $regmembers) || (!in_array(strval($memberid), $regmembers) && $this->Update(strval($memberid), 'character') === true)) {
-                            $queries[] = [
-                                'INSERT INTO `ffxiv__freecompany_character` (`characterid`, `freecompanyid`, `join`, `rankid`) VALUES (:memberid, :freecompanyid, UTC_DATE(), :rankid) ON DUPLICATE KEY UPDATE `rankid`=:rankid;',
-                                [
-                                    ':memberid'=>$memberid,
-                                    ':freecompanyid'=>$data['freecompanyid'],
-                                    ':rankid'=>$member['rankid'],
-                                ],
-                            ];
-                        }
-                    }
+                    #Register or update rank names
+                    $queries[] = [
+                            'INSERT INTO `ffxiv__freecompany_rank` (`freecompanyid`, `rankid`, `rankname`) VALUE (:freecompanyid, :rankid, :rankname) ON DUPLICATE KEY UPDATE `rankname`=:rankname',
+                            [
+                                ":freecompanyid"=>$data['freecompanyid'],
+                                ":rankid"=>$member['rankid'],
+                                ":rankname"=>$member['rank'],
+                            ],
+                        ];
+                    #Register character in company
+                    $queries[] = [
+                        'INSERT INTO `ffxiv__freecompany_character` (`characterid`, `freecompanyid`, `join`, `rankid`) VALUES (:memberid, :freecompanyid, UTC_DATE(), :rankid) ON DUPLICATE KEY UPDATE `rankid`=:rankid;',
+                        [
+                            ':memberid'=>$memberid,
+                            ':freecompanyid'=>$data['freecompanyid'],
+                            ':rankid'=>$member['rankid'],
+                        ],
+                    ];
                 }
             }
             #Mass remove characters, that left Free Company
-            $queries = array_merge($queries, $this->MassRemoveFromGroup($data['freecompanyid'], 'freecompany', $inmembers));
+            $queries = array_merge($queries, $this->MassRemoveFromGroup($data['freecompanyid'], 'freecompany', $inMembers));
             #Running the queries we've accumulated
             (new Controller)->query($queries);
             return true;
@@ -332,6 +329,7 @@ trait Updater
     private function LinkshellUpdate(array $data): string|bool
     {
         try {
+            $charCron = false;
             #Main query to insert or update a Linkshell
             $queries[] = [
                 'INSERT INTO `ffxiv__linkshell`(`linkshellid`, `name`, `crossworld`, `formed`, `registered`, `updated`, `deleted`, `serverid`) VALUES (:linkshellid, :name, 0, NULL, UTC_DATE(), UTC_TIMESTAMP(), NULL, (SELECT `serverid` FROM `ffxiv__server` WHERE `server`=:server)) ON DUPLICATE KEY UPDATE `name`=:name, `formed`=NULL, `updated`=UTC_TIMESTAMP(), `deleted`=NULL, `serverid`=(SELECT `serverid` FROM `ffxiv__server` WHERE `server`=:server), `communityid`=:communityid;',
@@ -365,31 +363,28 @@ trait Updater
             }
             #Set list of members for select and list of members already registered
             if (empty($members)) {
-                $inmembers = '\'\'';
-                $regmembers = [];
+                $inMembers = '\'\'';
+                $regMembers = [];
             } else {
-                $inmembers = implode(',', $members);
-                $regmembers = (new Controller)->selectColumn('SELECT `characterid` FROM `ffxiv__character` WHERE `characterid` IN ('.$inmembers.')');
+                $inMembers = implode(',', $members);
+                $regMembers = (new Controller)->selectColumn('SELECT `characterid` FROM `ffxiv__character` WHERE `characterid` IN ('.$inMembers.')');
             }
             #Actually registering/updating members
             if (!empty($data['members'])) {
+                $this->charMassCron($data['members'], $regMembers);
                 foreach ($data['members'] as $memberid=>$member) {
-                    if (preg_match('/^\d{1,10}$/', strval($memberid))) {
-                        if (in_array(strval($memberid), $regmembers) || (!in_array(strval($memberid), $regmembers) && $this->Update(strval($memberid), 'character') === true)) {
-                            $queries[] = [
-                                'INSERT INTO `ffxiv__linkshell_character` (`linkshellid`, `characterid`, `rankid`) VALUES (:linkshellid, :memberid, (SELECT `lsrankid` FROM `ffxiv__linkshell_rank` WHERE `rank`=:rank AND `rank` IS NOT NULL LIMIT 1)) ON DUPLICATE KEY UPDATE `rankid`=(SELECT `lsrankid` FROM `ffxiv__linkshell_rank` WHERE `rank`=:rank AND `rank` IS NOT NULL LIMIT 1);',
-                                [
-                                    ':linkshellid'=>$data['linkshellid'],
-                                    ':memberid'=>$memberid,
-                                    ':rank'=>(empty($member['rank']) ? 'Member' : $member['rank'])
-                                ],
-                            ];
-                        }
-                    }
+                     $queries[] = [
+                        'INSERT INTO `ffxiv__linkshell_character` (`linkshellid`, `characterid`, `rankid`) VALUES (:linkshellid, :memberid, (SELECT `lsrankid` FROM `ffxiv__linkshell_rank` WHERE `rank`=:rank AND `rank` IS NOT NULL LIMIT 1)) ON DUPLICATE KEY UPDATE `rankid`=(SELECT `lsrankid` FROM `ffxiv__linkshell_rank` WHERE `rank`=:rank AND `rank` IS NOT NULL LIMIT 1);',
+                        [
+                            ':linkshellid'=>$data['linkshellid'],
+                            ':memberid'=>$memberid,
+                            ':rank'=>(empty($member['rank']) ? 'Member' : $member['rank'])
+                        ],
+                    ];
                 }
             }
             #Mass remove characters, that left Free Company
-            $queries = array_merge($queries, $this->MassRemoveFromGroup($data['linkshellid'], 'linkshell', $inmembers));
+            $queries = array_merge($queries, $this->MassRemoveFromGroup($data['linkshellid'], 'linkshell', $inMembers));
             #Running the queries we've accumulated
             (new Controller)->query($queries);
             return true;
@@ -401,6 +396,7 @@ trait Updater
     private function CrossLinkUpdate(array $data): string|bool
     {
         try {
+            $charCron = false;
             #Main query to insert or update a Linkshell
             $queries[] = [
                 'INSERT INTO `ffxiv__linkshell`(`linkshellid`, `name`, `crossworld`, `formed`, `registered`, `updated`, `deleted`, `serverid`, `communityid`) VALUES (:linkshellid, :name, 1, :formed, UTC_DATE(), UTC_TIMESTAMP(), NULL, (SELECT `serverid` FROM `ffxiv__server` WHERE `datacenter`=:datacenter LIMIT 1), :communityid) ON DUPLICATE KEY UPDATE `name`=:name, `formed`=:formed, `updated`=UTC_TIMESTAMP(), `deleted`=NULL, `serverid`=(SELECT `serverid` FROM `ffxiv__server` WHERE `datacenter`=:datacenter LIMIT 1), `communityid`=:communityid;',
@@ -435,31 +431,28 @@ trait Updater
             }
             #Set list of members for select and list of members already registered
             if (empty($members)) {
-                $inmembers = '\'\'';
-                $regmembers = [];
+                $inMembers = '\'\'';
+                $regMembers = [];
             } else {
-                $inmembers = implode(',', $members);
-                $regmembers = (new Controller)->selectColumn('SELECT `characterid` FROM `ffxiv__character` WHERE `characterid` IN ('.$inmembers.')');
+                $inMembers = implode(',', $members);
+                $regMembers = (new Controller)->selectColumn('SELECT `characterid` FROM `ffxiv__character` WHERE `characterid` IN ('.$inMembers.')');
             }
             #Actually registering/updating members
             if (!empty($data['members'])) {
+                $this->charMassCron($data['members'], $regMembers);
                 foreach ($data['members'] as $memberid=>$member) {
-                    if (preg_match('/^\d{1,10}$/', strval($memberid))) {
-                        if (in_array(strval($memberid), $regmembers) || (!in_array(strval($memberid), $regmembers) && $this->Update(strval($memberid), 'character') === true)) {
-                            $queries[] = [
-                                'INSERT INTO `ffxiv__linkshell_character` (`linkshellid`, `characterid`, `rankid`) VALUES (:linkshellid, :memberid, (SELECT `lsrankid` FROM `ffxiv__linkshell_rank` WHERE `rank`=:rank AND `rank` IS NOT NULL LIMIT 1)) ON DUPLICATE KEY UPDATE `rankid`=(SELECT `lsrankid` FROM `ffxiv__linkshell_rank` WHERE `rank`=:rank AND `rank` IS NOT NULL LIMIT 1);',
-                                [
-                                    ':linkshellid'=>$data['linkshellid'],
-                                    ':memberid'=>$memberid,
-                                    ':rank'=>(empty($member['rank']) ? 'Member' : $member['rank'])
-                                ],
-                            ];
-                        }
-                    }
+                    $queries[] = [
+                        'INSERT INTO `ffxiv__linkshell_character` (`linkshellid`, `characterid`, `rankid`) VALUES (:linkshellid, :memberid, (SELECT `lsrankid` FROM `ffxiv__linkshell_rank` WHERE `rank`=:rank AND `rank` IS NOT NULL LIMIT 1)) ON DUPLICATE KEY UPDATE `rankid`=(SELECT `lsrankid` FROM `ffxiv__linkshell_rank` WHERE `rank`=:rank AND `rank` IS NOT NULL LIMIT 1);',
+                        [
+                            ':linkshellid'=>$data['linkshellid'],
+                            ':memberid'=>$memberid,
+                            ':rank'=>(empty($member['rank']) ? 'Member' : $member['rank'])
+                        ],
+                    ];
                 }
             }
             #Mass remove characters, that left Free Company
-            $queries = array_merge($queries, $this->MassRemoveFromGroup($data['linkshellid'], 'linkshell', $inmembers));
+            $queries = array_merge($queries, $this->MassRemoveFromGroup($data['linkshellid'], 'linkshell', $inMembers));
             #Running the queries we've accumulated
             (new Controller)->query($queries);
             return true;
@@ -471,6 +464,7 @@ trait Updater
     private function PVPUpdate(array $data): string|bool
     {
         try {
+            $charCron = false;
             #Attempt to get crest
             $data['crest'] = $this->CrestMerge($data['pvpteamid'], $data['crest']);
             #Main query to insert or update a PvP Team
@@ -509,30 +503,27 @@ trait Updater
             }
             #Set list of members for select and list of members already registered
             if (empty($members)) {
-                $inmembers = '\'\'';
-                $regmembers = [];
+                $inMembers = '\'\'';
+                $regMembers = [];
             } else {
-                $inmembers = implode(',', $members);
-                $regmembers = (new Controller)->selectColumn('SELECT `characterid` FROM `ffxiv__character` WHERE `characterid` IN ('.$inmembers.')');
+                $inMembers = implode(',', $members);
+                $regMembers = (new Controller)->selectColumn('SELECT `characterid` FROM `ffxiv__character` WHERE `characterid` IN ('.$inMembers.')');
             }
             #Actually registering/updating members
             foreach ($data['members'] as $memberid=>$member) {
-                if (preg_match('/^\d{1,10}$/', strval($memberid))) {
-                    if (in_array(strval($memberid), $regmembers) || (!in_array(strval($memberid), $regmembers) && $this->Update(strval($memberid), 'character') === true)) {
-                        $queries[] = [
-                            'INSERT INTO `ffxiv__pvpteam_character` (`pvpteamid`, `characterid`, `rankid`, `matches`) VALUES (:pvpteamid, :memberid, (SELECT `pvprankid` FROM `ffxiv__pvpteam_rank` WHERE `rank`=:rank AND `rank` IS NOT NULL LIMIT 1), :matches) ON DUPLICATE KEY UPDATE `rankid`=(SELECT `pvprankid` FROM `ffxiv__pvpteam_rank` WHERE `rank`=:rank AND `rank` IS NOT NULL LIMIT 1), `matches`=:matches;',
-                            [
-                                ':pvpteamid'=>$data['pvpteamid'],
-                                ':memberid'=>$memberid,
-                                ':rank'=>(empty($member['rank']) ? 'Member' : $member['rank']),
-                                ':matches'=>(empty($member['feasts']) ? 0 : $member['feasts']),
-                            ],
-                        ];
-                    }
-                }
+                $this->charMassCron($data['members'], $regMembers);
+                $queries[] = [
+                    'INSERT INTO `ffxiv__pvpteam_character` (`pvpteamid`, `characterid`, `rankid`, `matches`) VALUES (:pvpteamid, :memberid, (SELECT `pvprankid` FROM `ffxiv__pvpteam_rank` WHERE `rank`=:rank AND `rank` IS NOT NULL LIMIT 1), :matches) ON DUPLICATE KEY UPDATE `rankid`=(SELECT `pvprankid` FROM `ffxiv__pvpteam_rank` WHERE `rank`=:rank AND `rank` IS NOT NULL LIMIT 1), `matches`=:matches;',
+                    [
+                        ':pvpteamid'=>$data['pvpteamid'],
+                        ':memberid'=>$memberid,
+                        ':rank'=>(empty($member['rank']) ? 'Member' : $member['rank']),
+                        ':matches'=>(empty($member['feasts']) ? 0 : $member['feasts']),
+                    ],
+                ];
             }
             #Mass remove characters, that left Free Company
-            $queries = array_merge($queries, $this->MassRemoveFromGroup($data['pvpteamid'], 'pvpteam', $inmembers));
+            $queries = array_merge($queries, $this->MassRemoveFromGroup($data['pvpteamid'], 'pvpteam', $inMembers));
             #Running the queries we've accumulated
             (new Controller)->query($queries);
             return true;
@@ -676,5 +667,42 @@ trait Updater
             $queries = array_merge($queries, $this->RemoveFromGroup($id, 'pvpteam'));
         }
         return (new Controller)->query($queries);
+    }
+
+    /**
+     * @throws \Exception
+     */
+    #Helper function to add new characters to Cron en mass
+    private function charMassCron(array $groupMembers, array $regMembers): void
+    {
+        #Cache CRON object
+        $cron = (new Cron);
+        $controller = (new Controller);
+        #Register update of newly registered members.
+        if (!empty($groupMembers)) {
+            foreach ($groupMembers as $memberid => $member) {
+                if (!in_array(strval($memberid), $regMembers)) {
+                    #Using TIMESTAMPADD to circumvent 1 hour restrictions for updates.
+                    #Using IGNORE as precaution, in case character gets registered in parallel
+                    $controller->query(
+                        'INSERT IGNORE INTO `ffxiv__character`(
+                                        `characterid`, `serverid`, `name`, `registered`, `updated`, `avatar`, `gcrankid`
+                                    )
+                                    VALUES (
+                                        :characterid, (SELECT `serverid` FROM `ffxiv__server` WHERE `server`=:server), :name, UTC_DATE(), TIMESTAMPADD(SECOND, -3600, UTC_TIMESTAMP()), :avatar, `gcrankid` = (SELECT `gcrankid` FROM `ffxiv__grandcompany_rank` WHERE `gc_rank` IS NOT NULL AND `gc_rank`=:gcrank ORDER BY `gcrankid` LIMIT 1)
+                                    )',
+                        [
+                            ':characterid'=>$memberid,
+                            ':server'=>$member['server'],
+                            ':name'=>$member['name'],
+                            ':avatar'=>str_replace(['https://img2.finalfantasyxiv.com/f/', 'c0_96x96.jpg'], '', $member['avatar']),
+                            ':gcrank'=>(empty($member['grandCompany']['rank']) ? '' : $member['grandCompany']['rank']),
+                        ]
+                    );
+                    #Priority is higher, since they are missing a lot of data.
+                    $cron->add('ffentityupdate', [$memberid, 'character'], priority: 2, message: 'Updating character with ID ' . $memberid);
+                }
+            }
+        }
     }
 }
