@@ -32,8 +32,20 @@ class FFTracker
         }
     }
 
+    /**
+     * @throws \Exception
+     */
     public function Update(string $id, string $type = '', string $charId = ''): string|bool
     {
+        #If type is set, check if entity exists and get its updated time
+        if (!empty($type) && in_array($type, ['achievement', 'character', 'freecompany', 'linkshell', 'pvpteam'])) {
+            $updated = (new Database\Controller)->selectValue('SELECT `updated` FROM `ffxiv__'.$type.'` WHERE `'.$type.'id` = :id', [':id'=>$id]);
+            #Check if it has not been updated recently (1 hour, to protect potential abuse)
+            if ($updated !== NULL && (time() - strtotime($updated)) < 3600) {
+                #Return entity type
+                return $type;
+            }
+        }
         #Grab data first
         $data = $this->LodestoneGrab($id, $type, $charId);
         if (is_array($data)) {
