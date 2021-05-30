@@ -302,7 +302,7 @@ trait Updater
                             [
                                 ":freecompanyid"=>$data['freecompanyid'],
                                 ":rankid"=>$member['rankid'],
-                                ":rankname"=>$member['rank'],
+                                ":rankname"=>$member['rank'] ?? '',
                             ],
                         ];
                     #Register character in company
@@ -329,7 +329,6 @@ trait Updater
     private function LinkshellUpdate(array $data): string|bool
     {
         try {
-            $charCron = false;
             #Main query to insert or update a Linkshell
             $queries[] = [
                 'INSERT INTO `ffxiv__linkshell`(`linkshellid`, `name`, `crossworld`, `formed`, `registered`, `updated`, `deleted`, `serverid`) VALUES (:linkshellid, :name, 0, NULL, UTC_DATE(), UTC_TIMESTAMP(), NULL, (SELECT `serverid` FROM `ffxiv__server` WHERE `server`=:server)) ON DUPLICATE KEY UPDATE `name`=:name, `formed`=NULL, `updated`=UTC_TIMESTAMP(), `deleted`=NULL, `serverid`=(SELECT `serverid` FROM `ffxiv__server` WHERE `server`=:server), `communityid`=:communityid;',
@@ -396,7 +395,6 @@ trait Updater
     private function CrossLinkUpdate(array $data): string|bool
     {
         try {
-            $charCron = false;
             #Main query to insert or update a Linkshell
             $queries[] = [
                 'INSERT INTO `ffxiv__linkshell`(`linkshellid`, `name`, `crossworld`, `formed`, `registered`, `updated`, `deleted`, `serverid`, `communityid`) VALUES (:linkshellid, :name, 1, :formed, UTC_DATE(), UTC_TIMESTAMP(), NULL, (SELECT `serverid` FROM `ffxiv__server` WHERE `datacenter`=:datacenter LIMIT 1), :communityid) ON DUPLICATE KEY UPDATE `name`=:name, `formed`=:formed, `updated`=UTC_TIMESTAMP(), `deleted`=NULL, `serverid`=(SELECT `serverid` FROM `ffxiv__server` WHERE `datacenter`=:datacenter LIMIT 1), `communityid`=:communityid;',
@@ -464,7 +462,6 @@ trait Updater
     private function PVPUpdate(array $data): string|bool
     {
         try {
-            $charCron = false;
             #Attempt to get crest
             $data['crest'] = $this->CrestMerge($data['pvpteamid'], $data['crest']);
             #Main query to insert or update a PvP Team
