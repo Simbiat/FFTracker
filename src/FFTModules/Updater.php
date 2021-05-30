@@ -302,7 +302,7 @@ trait Updater
                             [
                                 ":freecompanyid"=>$data['freecompanyid'],
                                 ":rankid"=>$member['rankid'],
-                                ":rankname"=>$member['rank'] ?? '',
+                                ":rankname"=>(empty($member['rank']) ? '' : $member['rank']),
                             ],
                         ];
                     #Register character in company
