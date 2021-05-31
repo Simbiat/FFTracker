@@ -9,11 +9,11 @@ trait Crest
     private function CrestMerge(string $groupId, array $images): string
     {
         try {
-            $imgFolder = dirname(__DIR__) . '/Images/merged-crests/';
+            $imgFolder = dirname(__DIR__) . '../../../../img/fftracker/merged-crests/';
             #Checking if directory exists
-            if (!file_exists($imgFolder)) {
+            if (!is_dir($imgFolder)) {
                 #Creating directory
-                mkdir($imgFolder, recursive: true);
+                @mkdir($imgFolder, recursive: true);
             }
             #Preparing set of layers, since Lodestone stores crests as 3 (or less) separate images
             $layers = array();
