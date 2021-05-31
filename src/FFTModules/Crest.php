@@ -5,25 +5,15 @@ namespace Simbiat\FFTModules;
 
 trait Crest
 {
-    public function ImageShow(string $imgName): string
-    {
-        $imgName = dirname(__DIR__).'/Images/'.$imgName;
-        if (!file_exists($imgName)) {
-            #Use placeholder
-            $imgName = dirname(__DIR__).'/Images/fftracker.png';
-        }
-        return $imgName;
-    }
-
     #Function to merge 1 to 3 images making up a crest on Lodestone into 1 stored on tracker side
     private function CrestMerge(string $groupId, array $images): string
     {
         try {
-            $imgFolder = dirname(__DIR__).'/Images/merged-crests/';
+            $imgFolder = dirname(__DIR__) . '/Images/merged-crests/';
             #Checking if directory exists
             if (!file_exists($imgFolder)) {
                 #Creating directory
-                mkdir($imgFolder, 0777, true);
+                mkdir($imgFolder, recursive: true);
             }
             #Preparing set of layers, since Lodestone stores crests as 3 (or less) separate images
             $layers = array();
