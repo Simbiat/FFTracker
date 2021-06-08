@@ -40,8 +40,8 @@ class FFTracker
         #If type is set, check if entity exists and get its updated time
         if (!empty($type) && in_array($type, ['achievement', 'character', 'freecompany', 'linkshell', 'crossworldlinkshell', 'pvpteam'])) {
             $updated = (new Database\Controller)->selectValue('SELECT `updated` FROM `ffxiv__'.($type === 'crossworldlinkshell' ? 'linkshell' : $type).'` WHERE `'.($type === 'crossworldlinkshell' ? 'linkshell' : $type).'id` = :id', [':id'=>$id]);
-            #Check if it has not been updated recently (1 hour, to protect potential abuse)
-            if ($updated !== NULL && (time() - strtotime($updated)) < 3600) {
+            #Check if it has not been updated recently (10 minutes, to protect potential abuse)
+            if ($updated !== NULL && (time() - strtotime($updated)) < 600) {
                 #Return entity type
                 return $type;
             }

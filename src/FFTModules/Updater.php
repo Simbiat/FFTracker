@@ -108,8 +108,8 @@ trait Updater
             if (empty($data['freeCompany']['id'])) {
                 $queries = array_merge($queries, $this->RemoveFromGroup($data['characterid'], 'freecompany'));
             } else {
-                #Check if not already registered in this Free Company
-                if (!(new Controller)->check('SELECT `characterid` FROM `ffxiv__freecompany_character` WHERE `characterid`=:characterid AND `freecompanyid`=:freecompanyid', [':characterid'=>$data['characterid'],':freecompanyid'=>$data['freeCompany']['id']]) === true) {
+                #Check if not already registered in this Free Company (do not do anything if registered)
+                if ((new Controller)->check('SELECT `characterid` FROM `ffxiv__freecompany_character` WHERE `characterid`=:characterid AND `freecompanyid`=:freecompanyid', [':characterid'=>$data['characterid'],':freecompanyid'=>$data['freeCompany']['id']]) === false) {
                     #Remove character from other companies
                     $queries = array_merge($queries, $this->RemoveFromGroup($data['characterid'], 'freecompany'));
                     #Add to company (without rank) if the company is already registered. Needed to prevent grabbing data for the character again during company update. If company is not registered yet - nothing will happen
@@ -128,8 +128,8 @@ trait Updater
             if (empty($data['pvp']['id'])) {
                 $queries = array_merge($queries, $this->RemoveFromGroup($data['characterid'], 'pvpteam'));
             } else {
-                #Check if not already registered in this PvP Team
-                if (!(new Controller)->check('SELECT `characterid` FROM `ffxiv__pvpteam_character` WHERE `characterid`=:characterid AND `pvpteamid`=:pvpteamid', [':characterid'=>$data['characterid'],':pvpteamid'=>$data['pvp']['id']])) {
+                #Check if not already registered in this PvP Team (do not do anything if registered)
+                if ((new Controller)->check('SELECT `characterid` FROM `ffxiv__pvpteam_character` WHERE `characterid`=:characterid AND `pvpteamid`=:pvpteamid', [':characterid'=>$data['characterid'],':pvpteamid'=>$data['pvp']['id']]) === false) {
                     #Remove character from other teams
                     $queries = array_merge($queries, $this->RemoveFromGroup($data['characterid'], 'pvpteam'));
                     #Add to team (without rank) if the team is already registered. Needed to prevent grabbing data for the character again during team update. If team is not registered yet - nothing will happen
@@ -268,22 +268,22 @@ trait Updater
             #There were cases when some characters had non-numeric symbols on certain HTML pages, this is more of a precaution now
             if (!empty($data['members'])) {
                 foreach ($data['members'] as $memberid=>$member) {
-                    if (preg_match('/^\d{1,10}$/', strval($memberid))) {
-                        $members[] = '\''.$memberid.'\'';
-                    }
+                    $members[] = '\''.$memberid.'\'';
                 }
             }
-            #Adding ranking at this point since it needs members count, that we just got
-            if (!empty($data['weekly_rank']) && !empty($data['monthly_rank'])) {
-                $queries[] = [
-                    'INSERT INTO `ffxiv__freecompany_ranking` (`freecompanyid`, `date`, `weekly`, `monthly`, `members`) SELECT * FROM (SELECT :freecompanyid AS `freecompanyid`, UTC_DATE() AS `date`, :weekly AS `weekly`, :monthly AS `monthly`, :members AS `members` FROM DUAL WHERE :freecompanyid NOT IN (SELECT `freecompanyid` FROM (SELECT * FROM `ffxiv__freecompany_ranking` WHERE `freecompanyid`=:freecompanyid ORDER BY `date` DESC LIMIT 1) `lastrecord` WHERE `weekly`=:weekly AND `monthly`=:monthly) LIMIT 1) `actualinsert` ON DUPLICATE KEY UPDATE `weekly`=:weekly, `monthly`=:monthly, `members`=:members;',
-                    [
-                        ':freecompanyid'=>$data['freecompanyid'],
-                        ':weekly'=>$data['weekly_rank'],
-                        ':monthly'=>$data['monthly_rank'],
-                        ':members'=>count($members),
-                    ],
-                ];
+            if (!empty($data['members'])) {
+                #Adding ranking
+                if (!empty($data['weekly_rank']) && !empty($data['monthly_rank'])) {
+                    $queries[] = [
+                        'INSERT INTO `ffxiv__freecompany_ranking` (`freecompanyid`, `date`, `weekly`, `monthly`, `members`) SELECT * FROM (SELECT :freecompanyid AS `freecompanyid`, UTC_DATE() AS `date`, :weekly AS `weekly`, :monthly AS `monthly`, :members AS `members` FROM DUAL WHERE :freecompanyid NOT IN (SELECT `freecompanyid` FROM (SELECT * FROM `ffxiv__freecompany_ranking` WHERE `freecompanyid`=:freecompanyid ORDER BY `date` DESC LIMIT 1) `lastrecord` WHERE `weekly`=:weekly AND `monthly`=:monthly) LIMIT 1) `actualinsert` ON DUPLICATE KEY UPDATE `weekly`=:weekly, `monthly`=:monthly, `members`=:members;',
+                        [
+                            ':freecompanyid' => $data['freecompanyid'],
+                            ':weekly' => $data['weekly_rank'],
+                            ':monthly' => $data['monthly_rank'],
+                            ':members' => count($data['members']),
+                        ],
+                    ];
+                }
             }
             #Set list of members for select and list of members already registered
             if (empty($members)) {
@@ -293,6 +293,8 @@ trait Updater
                 $inMembers = implode(',', $members);
                 $regMembers = (new Controller)->selectColumn('SELECT `characterid` FROM `ffxiv__character` WHERE `characterid` IN ('.$inMembers.')');
             }
+            #Mass remove characters, that left Free Company
+            $queries = array_merge($queries, $this->MassRemoveFromGroup($data['freecompanyid'], 'freecompany', $inMembers));
             if (!empty($data['members'])) {
                 $this->charMassCron($data['members'], $regMembers);
                 foreach ($data['members'] as $memberid=>$member) {
@@ -316,10 +318,15 @@ trait Updater
                     ];
                 }
             }
-            #Mass remove characters, that left Free Company
-            $queries = array_merge($queries, $this->MassRemoveFromGroup($data['freecompanyid'], 'freecompany', $inMembers));
             #Running the queries we've accumulated
             (new Controller)->query($queries);
+
+
+            #Temporary to try to catch issue with empty groups
+            #if (empty((new Controller)->selectAll('SELECT * FROM `ffxiv__freecompany_character` WHERE `freecompanyid`=:id', [':id'=>$data['freecompanyid']]))) {
+            #    file_put_contents(__DIR__.'/log.html', var_export($data,true)."\r\n".var_export($queries, true)."\r\n\r\n\r\n", FILE_APPEND);
+            #}
+
             return true;
         } catch(\Exception $e) {
             return $e->getMessage()."\r\n".$e->getTraceAsString();
@@ -368,6 +375,8 @@ trait Updater
                 $inMembers = implode(',', $members);
                 $regMembers = (new Controller)->selectColumn('SELECT `characterid` FROM `ffxiv__character` WHERE `characterid` IN ('.$inMembers.')');
             }
+            #Mass remove characters, that left Free Company
+            $queries = array_merge($queries, $this->MassRemoveFromGroup($data['linkshellid'], 'linkshell', $inMembers));
             #Actually registering/updating members
             if (!empty($data['members'])) {
                 $this->charMassCron($data['members'], $regMembers);
@@ -382,8 +391,6 @@ trait Updater
                     ];
                 }
             }
-            #Mass remove characters, that left Free Company
-            $queries = array_merge($queries, $this->MassRemoveFromGroup($data['linkshellid'], 'linkshell', $inMembers));
             #Running the queries we've accumulated
             (new Controller)->query($queries);
             return true;
@@ -435,6 +442,8 @@ trait Updater
                 $inMembers = implode(',', $members);
                 $regMembers = (new Controller)->selectColumn('SELECT `characterid` FROM `ffxiv__character` WHERE `characterid` IN ('.$inMembers.')');
             }
+            #Mass remove characters, that left Free Company
+            $queries = array_merge($queries, $this->MassRemoveFromGroup($data['linkshellid'], 'linkshell', $inMembers));
             #Actually registering/updating members
             if (!empty($data['members'])) {
                 $this->charMassCron($data['members'], $regMembers);
@@ -449,8 +458,6 @@ trait Updater
                     ];
                 }
             }
-            #Mass remove characters, that left Free Company
-            $queries = array_merge($queries, $this->MassRemoveFromGroup($data['linkshellid'], 'linkshell', $inMembers));
             #Running the queries we've accumulated
             (new Controller)->query($queries);
             return true;
@@ -506,6 +513,8 @@ trait Updater
                 $inMembers = implode(',', $members);
                 $regMembers = (new Controller)->selectColumn('SELECT `characterid` FROM `ffxiv__character` WHERE `characterid` IN ('.$inMembers.')');
             }
+            #Mass remove characters, that left Free Company
+            $queries = array_merge($queries, $this->MassRemoveFromGroup($data['pvpteamid'], 'pvpteam', $inMembers));
             #Actually registering/updating members
             foreach ($data['members'] as $memberid=>$member) {
                 $this->charMassCron($data['members'], $regMembers);
@@ -519,8 +528,6 @@ trait Updater
                     ],
                 ];
             }
-            #Mass remove characters, that left Free Company
-            $queries = array_merge($queries, $this->MassRemoveFromGroup($data['pvpteamid'], 'pvpteam', $inMembers));
             #Running the queries we've accumulated
             (new Controller)->query($queries);
             return true;
@@ -622,7 +629,7 @@ trait Updater
         #If previously registered in a group, add to list of previous members for it
         /** @noinspection SqlResolve */
         $queries[] = [
-            'INSERT INTO `ffxiv__'.$grouptype.'_x_character` (`characterid`, `'.$grouptype.'id`) SELECT `ffxiv__'.$grouptype.'_character`.`characterid`, `ffxiv__'.$grouptype.'_character`.`'.$grouptype.'id` FROM `ffxiv__'.$grouptype.'_character` WHERE `ffxiv__'.$grouptype.'_character`.`'.$grouptype.'id`=:groupid'.($xmembers === '\'\'' ? '' : ' AND `ffxiv__'.$grouptype.'_character`.`characterid` NOT IN ('.$xmembers.')').' ON DUPLICATE KEY UPDATE `ffxiv__'.$grouptype.'_x_character`.`characterid`=`ffxiv__'.$grouptype.'_x_character`.`characterid`;',
+            'INSERT IGNORE INTO `ffxiv__'.$grouptype.'_x_character` (`characterid`, `'.$grouptype.'id`) SELECT `ffxiv__'.$grouptype.'_character`.`characterid`, `ffxiv__'.$grouptype.'_character`.`'.$grouptype.'id` FROM `ffxiv__'.$grouptype.'_character` WHERE `ffxiv__'.$grouptype.'_character`.`'.$grouptype.'id`=:groupid'.($xmembers === '\'\'' ? '' : ' AND `ffxiv__'.$grouptype.'_character`.`characterid` NOT IN ('.$xmembers.')').';',
             [
                 ':groupid'=>$groupid,
             ]

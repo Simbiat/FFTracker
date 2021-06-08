@@ -133,7 +133,7 @@ trait Grabber
     {
         $Lodestone = (new Lodestone);
         $data = $Lodestone->setLanguage($this->language)->setUseragent($this->useragent)->getFreeCompany($id)->getFreeCompanyMembers($id, 0)->getResult();
-        if (empty($data['freecompanies'][$id]['server']) || (!empty($data['freecompanies'][$id]['members']) && count($data['freecompanies'][$id]['members']) < $data['freecompanies'][$id]['members_count'])) {
+        if (empty($data['freecompanies'][$id]['server']) || (!empty($data['freecompanies'][$id]['members']) && count($data['freecompanies'][$id]['members']) < intval($data['freecompanies'][$id]['members_count'])) || (empty($data['freecompanies'][$id]['members']) && intval($data['freecompanies'][$id]['members_count']) > 0)) {
             if (@$data['freecompanies'][$id] == 404) {
                 $data['entitytype'] = 'freecompany';
                 $data['404'] = true;
@@ -157,7 +157,7 @@ trait Grabber
     {
         $Lodestone = (new Lodestone);
         $data = $Lodestone->setLanguage($this->language)->setUseragent($this->useragent)->getLinkshellMembers($id, 0)->getResult();
-        if (empty($data['linkshells'][$id]['server']) || (!empty($data['linkshells'][$id]['members']) && count($data['linkshells'][$id]['members']) < $data['linkshells'][$id]['memberscount'])) {
+        if (empty($data['linkshells'][$id]['server']) || (!empty($data['linkshells'][$id]['members']) && count($data['linkshells'][$id]['members']) < intval($data['linkshells'][$id]['memberscount'])) || (empty($data['linkshells'][$id]['members']) && intval($data['linkshells'][$id]['memberscount']) > 0)) {
             if (@$data['linkshells'][$id]['members'] == 404) {
                 $data['entitytype'] = 'linkshell';
                 $data['404'] = true;
@@ -181,7 +181,7 @@ trait Grabber
     {
         $Lodestone = (new Lodestone);
         $data = $Lodestone->setLanguage($this->language)->setUseragent($this->useragent)->getLinkshellMembers($id, 0)->getResult();
-        if (empty($data['linkshells'][$id]['dataCenter']) || (!empty($data['linkshells'][$id]['members']) && count($data['linkshells'][$id]['members']) < $data['linkshells'][$id]['memberscount'])) {
+        if (empty($data['linkshells'][$id]['dataCenter']) || (!empty($data['linkshells'][$id]['members']) && count($data['linkshells'][$id]['members']) < $data['linkshells'][$id]['memberscount']) || (empty($data['linkshells'][$id]['members']) && intval($data['linkshells'][$id]['memberscount']) > 0)) {
             if (@$data['linkshells'][$id]['members'] == 404) {
                 $data['entitytype'] = 'crossworldlinkshell';
                 $data['404'] = true;
